@@ -1,0 +1,6 @@
+%{
+  "b58": {:hex, :b58, "1.0.3", "d300d6ae5a3de956a54b9e8220e924e4fee1a349de983df2340fe61e0e464202", [:mix], [], "hexpm", "af62a98a8661fd89978cf3a3a4b5b2ebe82209de6ac6164f0b112e36af72fc59"},
+  "ecc_compact": {:hex, :ecc_compact, "1.1.1", "d45197db76eebd22b144552795c1950dd07b013d591ea2c3a8de22f8ee6c132b", [:rebar3], [], "hexpm", "86f8a8a33141c5390d72bdc2ce4d79b8cc74463a80d263a44fc988d353269504"},
+  "helium_proto": {:git, "file:///home/brandon/src/helium/proto", "825c5350a877607c91907bdd0cf393a86c16e4dd", [branch: "bp/router-config-service"]},
+  "protobuf": {:hex, :protobuf, "0.9.0", "9c1633ecc098f3d7ec0a00503e070541b0e1868114fff41523934888442319e7", [:mix], [{:jason, "~> 1.2", [hex: :jason, repo: "hexpm", optional: true]}], "hexpm", "15fb7cddc5f85b8055fedaf81a9093020e4cd283647a21deb8f7de8d243abb9d"},
+}
