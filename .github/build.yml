@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  push:
+    tags: '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+          repository: team-helium/helium-config-service
+          tag_with_ref: true
+          push: true
+          build_args: ROUTER_VERSION=${{ github.ref_name }}

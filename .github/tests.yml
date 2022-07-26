@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: helium_config_service_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      MIX_ENV: test
+      GITHUB_TOKEN: ${{github.GITHUB_TOKEN}}
+      PATH: "${PATH}:~/.mix/escripts:~/.cargo/bin"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-elixir@v1.0.0
+        with:
+          otp-version: 24.0
+          elixir-version: 1.13.4
+      - uses: actions/cache@v1
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock'))
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - run: apt update
+      - run: apt-get install -y -q build-essential bison flex git gzip autotools-dev automake libtool pkg-config cmake libsodium-dev iproute2 protobuf-compiler
+      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y -- default-toolchain stable
+      - run: mix local.rebar --force
+      - run: mix local.hex --force
+      - run: mix escript.install --force hex protobuf
+      - run: mix deps.get
+      - run: mix deps.compile
+      - run: mix test
+
+        
+
