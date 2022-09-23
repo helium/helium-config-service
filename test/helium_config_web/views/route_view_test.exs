@@ -1,45 +1,37 @@
 defmodule HeliumConfigWeb.RouteViewTest do
   use ExUnit.Case
 
-  alias HeliumConfig.Core.Route
+  alias HeliumConfig.Core.Route, as: CoreRoute
   alias HeliumConfigWeb.RouteView
 
   test "route_json/1 returns all of the required fields from a Route" do
-    route = %Route{
-      net_id: 7,
-      lns_address: "lns1.testdomain.com",
-      protocol: :gwmp,
-      euis: ["eui1"],
-      devaddr_ranges: [
-        {1, 5},
-        {6, 10}
-      ]
-    }
-
-    assert(
-      %{
+    core_route =
+      CoreRoute.new(%{
         net_id: 7,
         lns_address: "lns1.testdomain.com",
-        protocol: "gwmp",
-        euis: ["eui1"],
+        protocol: :gwmp,
+        euis: [%{app_eui: 1, dev_eui: 2}],
         devaddr_ranges: [
-          %{
-            start_addr: "00000001",
-            end_addr: "00000005"
-          },
-          %{
-            start_addr: "00000006",
-            end_addr: "0000000A"
-          }
+          {1, 5},
+          {6, 10}
         ]
-      } = RouteView.route_json(route)
-    )
+      })
+
+    json_params = RouteView.route_json(core_route)
+    json = Jason.encode!(json_params)
+
+    decoded =
+      json
+      |> Jason.decode!()
+      |> CoreRoute.from_web()
+
+    assert(decoded == core_route)
   end
 
-  test "devaddr_hex_string/1 returns a 8-digit, 0-padded hex string" do
-    assert("00000001" == RouteView.devaddr_hex_string(1))
-    assert("0000000F" == RouteView.devaddr_hex_string(15))
-    assert("FFFFFFFF" == RouteView.devaddr_hex_string(0xFFFFFFFF))
+  test "devaddr_to_hex_string/1 returns a 8-digit, 0-padded hex string" do
+    assert("00000001" == RouteView.devaddr_to_hex_string(1))
+    assert("0000000F" == RouteView.devaddr_to_hex_string(15))
+    assert("FFFFFFFF" == RouteView.devaddr_to_hex_string(0xFFFFFFFF))
   end
 
   describe "devaddr_range_json/1" do

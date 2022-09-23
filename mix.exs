@@ -10,7 +10,11 @@ defmodule HeliumConfig.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: [
+        ignore_warnings: "config/dialyzer.ignore",
+        flags: []
+      ]
     ]
   end
 
@@ -30,7 +34,7 @@ defmodule HeliumConfig.MixProject do
 
   def router_config_protos do
     [
-      "src/service/router_config.proto"
+      "src/service/config.proto"
     ]
   end
 
@@ -80,7 +84,7 @@ defmodule HeliumConfig.MixProject do
       {:grpc, "~> 0.5.0"},
       {:helium_proto,
        git: "https://github.com/helium/proto.git",
-       branch: "bp/router_config",
+       branch: "macpie/packet_router",
        compile: router_config_proto_compile(),
        app: false},
       {:libp2p_crypto, git: "https://github.com/helium/libp2p-crypto.git"}

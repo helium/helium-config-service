@@ -14,7 +14,7 @@ services:
                         - "5432:5432"
 
         helium_config:
-                image: helium_config_service:latest
+                image: hcs:latest
                 container_name: helium_config
                 ports:
                         - "4000:4000"

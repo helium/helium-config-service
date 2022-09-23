@@ -11,14 +11,31 @@ defmodule HeliumConfig.Core.Organization do
   An Organization has an OUI.
   """
 
+  alias HeliumConfig.Core.Route
+  alias HeliumConfig.DB
+
+  @type b58_pubkey :: String.t()
+
+  @type t :: %__MODULE__{
+          oui: integer,
+          owner_wallet_id: b58_pubkey,
+          payer_wallet_id: b58_pubkey,
+          routes: [Route.t()]
+        }
+
+  # Valid keys for json_params are:
+  # "oui" => integer,
+  # "owner_wallet_id" => bf8_pubkey,
+  # "payer_wallet_id" => bf8_pubkey,
+  # "routes" => [ Route.json_params ]
+  @type json_params :: %{String.t() => any()}
+
   defstruct oui: nil,
             owner_wallet_id: nil,
             payer_wallet_id: nil,
             routes: []
 
-  alias HeliumConfig.Core.Route
-  alias HeliumConfig.DB
-
+  @spec new(json_params) :: t
   def new(fields \\ %{}) do
     routes =
       fields
@@ -30,6 +47,7 @@ defmodule HeliumConfig.Core.Organization do
     struct!(__MODULE__, fields)
   end
 
+  @spec from_web(map()) :: t()
   def from_web(web_fields = %{"oui" => _}) do
     params =
       web_fields

@@ -29,17 +29,17 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
             "euis" => [
               %{
                 "dev_eui" => 100,
-                "app_eui" => 200
+                "app_eui" => 102
               }
             ],
             "devaddr_ranges" => [
               %{
-                "start_addr" => 100,
-                "end_addr" => 150
+                "start_addr" => "0000020",
+                "end_addr" => "000002F"
               },
               %{
-                "start_addr" => 250,
-                "end_addr" => 300
+                "start_addr" => "00000030",
+                "end_addr" => "0000003F"
               }
             ]
           }

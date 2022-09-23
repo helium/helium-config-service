@@ -18,7 +18,11 @@ defmodule HeliumConfig.Application do
       HeliumConfigWeb.Endpoint,
       # Start a worker by calling: HeliumConfig.Worker.start_link(arg)
       # {HeliumConfig.Worker, arg}
-      {GRPC.Server.Supervisor, {HeliumConfigGRPC.Endpoint, 50_051}}
+      {GRPC.Server.Supervisor, {HeliumConfigGRPC.Endpoint, 50_051}},
+
+      # Start an UpdateNotifier to signal subscribers (e.g. GRPC
+      # clients) when an Organization is updated.
+      HeliumConfig.DB.UpdateNotifier
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

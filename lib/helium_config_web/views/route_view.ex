@@ -21,12 +21,12 @@ defmodule HeliumConfigWeb.RouteView do
 
   def devaddr_range_json({s, e}) do
     %{
-      start_addr: devaddr_hex_string(s),
-      end_addr: devaddr_hex_string(e)
+      start_addr: devaddr_to_hex_string(s),
+      end_addr: devaddr_to_hex_string(e)
     }
   end
 
-  def devaddr_hex_string(devaddr) do
+  def devaddr_to_hex_string(devaddr) do
     devaddr
     |> Integer.to_string(16)
     |> String.pad_leading(8, "0")

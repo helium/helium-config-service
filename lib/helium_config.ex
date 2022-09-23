@@ -26,8 +26,12 @@ defmodule HeliumConfig do
       |> Repo.insert()
 
     case result do
-      {:ok, _} -> :ok
-      {:error, e} -> {:error, e}
+      {:ok, _} ->
+        DB.UpdateNotifier.notify_cast()
+        :ok
+
+      {:error, e} ->
+        {:error, e}
     end
   end
 
@@ -44,8 +48,12 @@ defmodule HeliumConfig do
       |> Repo.insert_or_update()
 
     case result do
-      {:ok, _} -> :ok
-      {:error, e} -> {:error, e}
+      {:ok, _} ->
+        DB.UpdateNotifier.notify_cast()
+        :ok
+
+      {:error, e} ->
+        {:error, e}
     end
   end
 
@@ -59,8 +67,12 @@ defmodule HeliumConfig do
       |> Repo.get!(oui)
 
     case Repo.delete(current) do
-      {:ok, _} -> :ok
-      {:error, e} -> {:error, e}
+      {:ok, _} ->
+        DB.UpdateNotifier.notify_cast()
+        :ok
+
+      {:error, e} ->
+        {:error, e}
     end
   end
 
@@ -68,6 +80,7 @@ defmodule HeliumConfig do
     DB.Organization
     |> Repo.all()
     |> Repo.preload(routes: :devaddr_ranges)
+    |> Repo.preload(routes: :euis)
     |> Enum.map(&Core.Organization.from_db/1)
   end
 

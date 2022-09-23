@@ -6,22 +6,25 @@ defmodule HeliumConfigGRPC.Endpoint do
 end
 
 defmodule HeliumConfigGRPC.Server do
-  use GRPC.Server, service: Proto.Helium.RouterConfig.Config.Service
+  use GRPC.Server, service: Proto.Helium.Config.ConfigService.Service
 
-  alias HeliumConfigGRPC.OrganizationView
-  alias Proto.Helium.RouterConfig.PacketRouterRoutesResV1
-  alias Proto.Helium.RouterConfig.PacketRouterRouteV1
+  alias HeliumConfigGRPC.RouteStreamWorker
 
-  # alias Proto.Helium.RouterConfig.PacketRouterRoutesResV1, as: RoutesResponseV1
+  def route_updates(%{__struct__: Proto.Helium.Config.RoutesReqV1}, stream) do
+    {:ok, worker} =
+      GenServer.start_link(RouteStreamWorker, notifier: :update_notifier, stream: stream)
 
-  def route_updates(_requests_enum, stream) do
-    routes =
-      HeliumConfig.list_routes()
-      |> Enum.map(&OrganizationView.route_params/1)
-      |> Enum.map(&PacketRouterRouteV1.new/1)
+    ref = Process.monitor(worker)
 
-    reply = PacketRouterRoutesResV1.new(routes: routes)
+    receive do
+      {:DOWN, ^ref, _, _, _} ->
+        :ok
+    end
 
-    GRPC.Server.send_reply(stream, reply)
+    stream
   end
+end
+
+defmodule HeliumConfigGRPC.Stub do
+  use GRPC.Stub, service: Proto.Helium.Config.ConfigService.Service
 end
