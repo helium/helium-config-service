@@ -1,6 +1,7 @@
 defmodule HeliumConfigWeb.OrganizationViewTest do
   use ExUnit.Case
 
+  alias HeliumConfig.Core.HttpRoamingLns
   alias HeliumConfig.Core.Organization
   alias HeliumConfigWeb.OrganizationView
 
@@ -13,8 +14,12 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
         routes: [
           %{
             net_id: 7,
-            lns_address: "lns1.testdomain.com",
-            protocol: :http,
+            lns: %HttpRoamingLns{
+              host: "lns1.testdomain.com",
+              port: 8080,
+              dedupe_window: 2000,
+              auth_header: "x-helium-auth"
+            },
             euis: ["eui1"],
             devaddr_ranges: [{0, 10}, {15, 20}]
           }
@@ -30,8 +35,13 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
         routes: [
           %{
             net_id: 7,
-            lns_address: "lns1.testdomain.com",
-            protocol: "http",
+            lns: %{
+              type: "http_roaming",
+              host: "lns1.testdomain.com",
+              port: 8080,
+              dedupe_window: 2000,
+              auth_header: "x-helium-auth"
+            },
             euis: ["eui1"],
             devaddr_ranges: [
               %{

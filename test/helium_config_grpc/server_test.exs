@@ -1,6 +1,8 @@
 defmodule HeliumConfigGRPC.ServerTest do
   use HeliumConfig.DataCase
 
+  alias HeliumConfig.Core.GwmpLns
+  alias HeliumConfig.Core.HttpRoamingLns
   alias HeliumConfig.Core.Organization
   alias HeliumConfig.Core.Route
   alias HeliumConfigGRPC.Stub
@@ -34,8 +36,12 @@ defmodule HeliumConfigGRPC.ServerTest do
           routes: [
             %{
               net_id: 1,
-              lns_address: "lns1.testdomain.com",
-              protocol: :http,
+              lns: %HttpRoamingLns{
+                host: "lns1.testdomain.com",
+                port: 4000,
+                dedupe_window: 2000,
+                auth_header: "x-helium-auth"
+              },
               euis: [
                 %{
                   dev_eui: 100,
@@ -56,8 +62,10 @@ defmodule HeliumConfigGRPC.ServerTest do
           routes: [
             %{
               net_id: 2,
-              lns_address: "lns2.testdomain.com",
-              protocol: :http,
+              lns: %GwmpLns{
+                host: "lns2.testdomain.com",
+                port: 8888
+              },
               euis: [
                 %{
                   dev_eui: 300,

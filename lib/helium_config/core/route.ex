@@ -2,6 +2,7 @@ defmodule HeliumConfig.Core.Route do
   @moduledoc """
   Data module representing a Route.
   """
+  alias HeliumConfig.Core.Lns
   alias HeliumConfig.DB
 
   # A string containing a DNS hostname or IP address
@@ -19,8 +20,6 @@ defmodule HeliumConfig.Core.Route do
 
   @type t :: %__MODULE__{
           net_id: integer,
-          lns_address: host_string,
-          protocol: :router | :gwmp | :http,
           euis: [eui_pair],
           devaddr_ranges: [devaddr_range]
         }
@@ -37,15 +36,12 @@ defmodule HeliumConfig.Core.Route do
 
   # Valid keys for json_params are:
   # "net_id" => integer,
-  # "lns_address" => host_string,
-  # "protocol" => "router" | "gwmp" | "http",
   # "euis" => [json_eui],
   # "devaddr_ranges" => [json_devaddr_range]
   @type json_params :: %{String.t() => any()}
 
   defstruct net_id: nil,
-            lns_address: nil,
-            protocol: nil,
+            lns: nil,
             euis: [],
             devaddr_ranges: []
 
@@ -61,24 +57,18 @@ defmodule HeliumConfig.Core.Route do
         {"net_id", net_id}, acc ->
           Map.put(acc, :net_id, net_id)
 
-        {"lns_address", lns_address}, acc ->
-          Map.put(acc, :lns_address, lns_address)
-
-        {"protocol", protocol}, acc ->
-          Map.put(acc, :protocol, protocol_from_web(protocol))
-
         {"euis", euis}, acc ->
           Map.put(acc, :euis, Enum.map(euis, &eui_from_web/1))
 
         {"devaddr_ranges", ranges}, acc ->
           Map.put(acc, :devaddr_ranges, Enum.map(ranges, &devaddr_range_from_web/1))
+
+        {"lns", lns}, acc ->
+          Map.put(acc, :lns, Lns.from_web(lns))
       end)
 
     struct!(__MODULE__, params)
   end
-
-  defp protocol_from_web("http"), do: :http
-  defp protocol_from_web("gwmp"), do: :gwmp
 
   defp eui_from_web(%{"dev_eui" => dev, "app_eui" => app}) do
     %{
@@ -94,8 +84,7 @@ defmodule HeliumConfig.Core.Route do
   def from_db(db_route = %DB.Route{}) do
     %__MODULE__{
       net_id: db_route.net_id,
-      lns_address: db_route.lns_address,
-      protocol: db_route.protocol,
+      lns: Lns.from_db(db_route.lns),
       euis:
         Enum.map(db_route.euis, fn db_eui ->
           %{app_eui: db_eui.app_eui, dev_eui: db_eui.dev_eui}
@@ -108,8 +97,7 @@ defmodule HeliumConfig.Core.Route do
   def from_proto(proto_route = %{__struct__: Proto.Helium.Config.RouteV1}) do
     %__MODULE__{
       net_id: proto_route.net_id,
-      lns_address: proto_route.lns,
-      protocol: proto_route.protocol,
+      lns: Lns.from_proto(proto_route.protocol),
       euis:
         Enum.map(proto_route.euis, fn e ->
           %{app_eui: e.app_eui, dev_eui: e.dev_eui}

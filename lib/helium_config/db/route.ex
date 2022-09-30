@@ -10,6 +10,7 @@ defmodule HeliumConfig.DB.Route do
   alias HeliumConfig.Core.Route, as: CoreRoute
   alias HeliumConfig.DB.DevaddrRange
   alias HeliumConfig.DB.EUI
+  alias HeliumConfig.DB.Lns
   alias HeliumConfig.DB.Organization
 
   defmodule ProtocolType do
@@ -35,8 +36,8 @@ defmodule HeliumConfig.DB.Route do
 
   schema "routes" do
     field :net_id, :integer
-    field :lns_address, :string
-    field :protocol, __MODULE__.ProtocolType
+
+    has_one :lns, Lns, on_replace: :delete
 
     has_many :euis,
              EUI,
@@ -58,8 +59,7 @@ defmodule HeliumConfig.DB.Route do
   def changeset(route = %__MODULE__{}, core_route = %CoreRoute{}) do
     fields = %{
       net_id: core_route.net_id,
-      lns_address: core_route.lns_address,
-      protocol: core_route.protocol,
+      lns: core_route.lns,
       euis: core_route.euis,
       devaddr_ranges:
         Enum.map(core_route.devaddr_ranges, fn {s, e} -> %{start_addr: s, end_addr: e} end)
@@ -70,8 +70,9 @@ defmodule HeliumConfig.DB.Route do
 
   def changeset(route = %__MODULE__{}, fields = %{}) do
     route
-    |> cast(fields, [:net_id, :lns_address, :protocol])
+    |> cast(fields, [:net_id])
     |> cast_assoc(:devaddr_ranges)
     |> cast_assoc(:euis)
+    |> cast_assoc(:lns)
   end
 end
