@@ -122,6 +122,8 @@ interfaces of the host machine at ports 4000 and 50051, respectively.
 
 `POST /api/v1/organizations` creates a new Organization record.
 
+Input:
+
 ```bash
 curl -X POST http://localhost:4000/api/v1/organizations \
  -H "content-type: application/json" \
@@ -134,8 +136,13 @@ curl -X POST http://localhost:4000/api/v1/organizations \
     "routes": [
       {
         "net_id": 7,
-        "lns_address": "lns1.testdomain.com",
-        "protocol": "http",
+        "lns": {
+            "type": "http_roaming",
+            "host": "lns1.testdomain.com",
+            "port": 8080,
+            "auth_header": "x-helium-auth",
+            "dedupe_window": 1200
+        },
         "euis": [
           {
             "dev_eui": 100,
@@ -144,8 +151,8 @@ curl -X POST http://localhost:4000/api/v1/organizations \
         ],
         "devaddr_ranges": [
           {
-            "start_addr": 200,
-            "end_addr": 300
+            "start_addr": "00000010",
+            "end_addr": "0000001F"
           }
         ]
       }
@@ -155,13 +162,25 @@ curl -X POST http://localhost:4000/api/v1/organizations \
 EOF
 ```
 
+Output:
+```bash
+{"status":"success"}
+```
+
 ### Get an Organization
 
 `GET /api/v1/organizations/${OUI}` returns an Organization record,
 given its OUI.
 
+Input (assuming you created OUI 7 as in the previous example):
+
+```bash
+curl http://localhost:4000/api/v1/organizations/7
 ```
-$ curl http://localhost:4000/api/v1/organizations/7
+
+Output:
+
+```bash
 {
   "organization": {
     "oui": 7,
@@ -171,8 +190,8 @@ $ curl http://localhost:4000/api/v1/organizations/7
       {
         "devaddr_ranges": [
           {
-            "end_addr": "0000012C",
-            "start_addr": "000000C8"
+            "end_addr": "0000001F",
+            "start_addr": "00000010"
           }
         ],
         "euis": [
@@ -181,23 +200,33 @@ $ curl http://localhost:4000/api/v1/organizations/7
             "dev_eui": 100
           }
         ],
-        "lns_address": "lns1.testdomain.com",
-        "net_id": 7,
-        "protocol": "http"
+        "lns": {
+          "auth_header": "x-helium-auth",
+          "dedupe_window": 1200,
+          "host": "lns1.testdomain.com",
+          "port": 8080,
+          "type": "http_roaming"
+        },
+        "net_id": 7
       }
     ]
   }
 }
-
 ```
 
 ### List Organizations
 
 `GET /api/v1/organizations` returns the list of all Organizations.
 
-```bash
-$ curl http://localhost:4000/api/v1/organizations
+Input:
 
+```bash
+curl http://localhost:4000/api/v1/organizations
+```
+
+Output:
+
+```bash
 {
   "organizations": [
     {
@@ -208,8 +237,8 @@ $ curl http://localhost:4000/api/v1/organizations
         {
           "devaddr_ranges": [
             {
-              "end_addr": "0000012C",
-              "start_addr": "000000C8"
+              "end_addr": "0000001F",
+              "start_addr": "00000010"
             }
           ],
           "euis": [
@@ -218,9 +247,14 @@ $ curl http://localhost:4000/api/v1/organizations
               "dev_eui": 100
             }
           ],
-          "lns_address": "lns1.testdomain.com",
-          "net_id": 7,
-          "protocol": "http"
+          "lns": {
+            "auth_header": "x-helium-auth",
+            "dedupe_window": 1200,
+            "host": "lns1.testdomain.com",
+            "port": 8080,
+            "type": "http_roaming"
+          },
+          "net_id": 7
         }
       ]
     }
@@ -233,15 +267,22 @@ $ curl http://localhost:4000/api/v1/organizations
 `GET /api/v1/routes` returns the list of all routes for all
 Organizations.  Helium Packet Router uses this data to route packets.
 
+Input:
+
 ```bash
-$ curl http://localhost:4000/api/v1/routes
+curl http://localhost:4000/api/v1/routes
+```
+
+Output:
+
+```bash
 {
   "routes": [
     {
       "devaddr_ranges": [
         {
-          "end_addr": "0000012C",
-          "start_addr": "000000C8"
+          "end_addr": "0000001F",
+          "start_addr": "00000010"
         }
       ],
       "euis": [
@@ -250,9 +291,14 @@ $ curl http://localhost:4000/api/v1/routes
           "dev_eui": 100
         }
       ],
-      "lns_address": "lns1.testdomain.com",
-      "net_id": 7,
-      "protocol": "http"
+      "lns": {
+        "auth_header": "x-helium-auth",
+        "dedupe_window": 1200,
+        "host": "lns1.testdomain.com",
+        "port": 8080,
+        "type": "http_roaming"
+      },
+      "net_id": 7
     }
   ]
 }
@@ -288,6 +334,8 @@ new data.
 
 ##### Example: Calling `route_updates` with `grpcurl`
 
+Fetch `helium/proto` if necessary:
+
 ```bash
 $ git clone http://github.com/helium/proto
 
@@ -296,22 +344,29 @@ $ cd proto
 $ git checkout macpie/packet_router
 Branch 'macpie/packet_router' set up to track remote branch 'macpie/packet_router' from 'origin'.
 Switched to a new branch 'macpie/packet_router'
+```
 
+Input:
 
-$ grpcurl -d '{}' \
+```bash
+grpcurl -d '{}' \
    --plaintext \
    --import-path ./src/service \
    --proto config.proto \
    localhost:50051 \
    helium.config.config_service/route_updates
+```
+
+Output:
+```bash
 {
   "routes": [
     {
       "netId": "7",
       "devaddrRanges": [
         {
-          "startAddr": "200",
-          "endAddr": "300"
+          "startAddr": "16",
+          "endAddr": "31"
         }
       ],
       "euis": [
@@ -320,8 +375,10 @@ $ grpcurl -d '{}' \
           "devEui": "100"
         }
       ],
-      "lns": "bG5zMS50ZXN0ZG9tYWluLmNvbQ==",
-      "protocol": "http"
+      "httpRoaming": {
+        "ip": "bG5zMS50ZXN0ZG9tYWluLmNvbQ==",
+        "port": 8080
+      }
     }
   ]
 }
@@ -329,4 +386,3 @@ $ grpcurl -d '{}' \
 
 The `-d {}` option is (empty) list of parameters for creating a
 `RoutesReqV1`.  `grpcurl` will hold the socket open until you kill it.
-
