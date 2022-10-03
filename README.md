@@ -57,7 +57,7 @@ Postgres running on localhost at port 5432.
 #### `test`
 
 `test` is the environment where `mix test` runs. It is assumed to have
-Postgress running on localhost at port 5432.
+Postgres running on localhost at port 5432.
 
 #### `prod`
 

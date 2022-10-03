@@ -47,6 +47,9 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       |> RouteV1.decode()
       |> CoreRoute.from_proto()
 
+    # RouteV1 does not yet support the `auth_header` and
+    # `dedupe_window` fields in an LNS.
+
     expected_lns =
       core_route
       |> Map.get(:lns)
