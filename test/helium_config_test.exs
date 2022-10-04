@@ -93,6 +93,7 @@ defmodule HeliumConfig.HeliumConfigTest do
       assert([] == Repo.all(DB.Organization))
       assert([] == Repo.all(DB.Route))
       assert([] == Repo.all(DB.DevaddrRange))
+      assert([] == Repo.all(DB.Lns))
     end
   end
 
@@ -104,8 +105,12 @@ defmodule HeliumConfig.HeliumConfigTest do
       routes: [
         %{
           net_id: 7,
-          lns_address: "route1.testdomain.com",
-          protocol: :http,
+          lns: %Core.HttpRoamingLns{
+            host: "route1.testdomain.com",
+            port: 8000,
+            dedupe_window: 1200,
+            auth_header: "x-helium-auth"
+          },
           euis: [
             %{
               dev_eui: 100,

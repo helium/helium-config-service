@@ -24,8 +24,13 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
         "routes" => [
           %{
             "net_id" => 7,
-            "lns_address" => "lns1.testdomain.com",
-            "protocol" => "http",
+            "lns" => %{
+              "type" => "http_roaming",
+              "host" => "lns1.testdomain.com",
+              "port" => 8080,
+              "dedupe_window" => 1200,
+              "auth_header" => "x-auth-header"
+            },
             "euis" => [
               %{
                 "dev_eui" => 100,

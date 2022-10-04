@@ -1,6 +1,8 @@
 defmodule HeliumConfigGRPC.RouteViewTest do
   use ExUnit.Case
 
+  alias HeliumConfig.Core.HttpRoamingLns
+
   alias HeliumConfig.Core.Route, as: CoreRoute
 
   alias HeliumConfigGRPC.RouteView
@@ -11,8 +13,12 @@ defmodule HeliumConfigGRPC.RouteViewTest do
     core_route =
       CoreRoute.new(%{
         net_id: 7,
-        lns_address: "lns1.testdomain.com",
-        protocol: :gwmp,
+        lns: %HttpRoamingLns{
+          host: "lns1.testdomain.com",
+          port: 8080,
+          dedupe_window: 1200,
+          auth_header: "x-helium-auth"
+        },
         euis: [
           %{
             app_eui: 87,
@@ -41,6 +47,17 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       |> RouteV1.decode()
       |> CoreRoute.from_proto()
 
-    assert(decoded == core_route)
+    # RouteV1 does not yet support the `auth_header` and
+    # `dedupe_window` fields in an LNS.
+
+    expected_lns =
+      core_route
+      |> Map.get(:lns)
+      |> Map.put(:auth_header, nil)
+      |> Map.put(:dedupe_window, nil)
+
+    expected = Map.put(core_route, :lns, expected_lns)
+
+    assert(decoded == expected)
   end
 end

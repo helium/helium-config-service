@@ -7,8 +7,7 @@ defmodule HeliumConfig.Core.RouteTest do
     expected =
       MapSet.new([
         :net_id,
-        :lns_address,
-        :protocol,
+        :lns,
         :euis,
         :devaddr_ranges
       ])

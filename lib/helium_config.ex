@@ -14,8 +14,7 @@ defmodule HeliumConfig do
   def get_organization(oui) do
     DB.Organization
     |> Repo.get(oui)
-    |> Repo.preload(routes: :devaddr_ranges)
-    |> Repo.preload(routes: :euis)
+    |> organization_preloads()
     |> Core.Organization.from_db()
   end
 
@@ -38,8 +37,12 @@ defmodule HeliumConfig do
   def save_organization(new_org = %Core.Organization{}) do
     current =
       case Repo.get(DB.Organization, new_org.oui) do
-        nil -> %DB.Organization{oui: new_org.oui}
-        existing_org -> Repo.preload(existing_org, routes: :devaddr_ranges)
+        nil ->
+          %DB.Organization{oui: new_org.oui}
+
+        existing_org ->
+          existing_org
+          |> organization_preloads()
       end
 
     result =
@@ -79,15 +82,19 @@ defmodule HeliumConfig do
   def list_organizations do
     DB.Organization
     |> Repo.all()
-    |> Repo.preload(routes: :devaddr_ranges)
-    |> Repo.preload(routes: :euis)
+    |> organization_preloads()
     |> Enum.map(&Core.Organization.from_db/1)
   end
 
   def list_routes do
     DB.Route
     |> Repo.all()
-    |> Repo.preload([:devaddr_ranges, :euis])
+    |> Repo.preload([:devaddr_ranges, :euis, :lns])
     |> Enum.map(&Core.Route.from_db/1)
+  end
+
+  defp organization_preloads(org) do
+    org
+    |> Repo.preload(routes: [:devaddr_ranges, :euis, :lns])
   end
 end

@@ -1,6 +1,8 @@
 defmodule HeliumConfig.Core.OrganizationTest do
   use HeliumConfig.DataCase
 
+  alias HeliumConfig.Core.GwmpLns
+  alias HeliumConfig.Core.HttpRoamingLns
   alias HeliumConfig.Core.Organization
   alias HeliumConfig.Core.Route
   alias HeliumConfig.DB.Organization, as: DBOrg
@@ -42,8 +44,12 @@ defmodule HeliumConfig.Core.OrganizationTest do
     route_params = [
       %{
         net_id: 7,
-        lns_address: "a.testdomain.com",
-        protocol: :http,
+        lns: %HttpRoamingLns{
+          host: "a.testdomain.com",
+          port: 8080,
+          dedupe_window: 1200,
+          auth_header: "x-helium-auth"
+        },
         euis: [
           %{app_eui: 1, dev_eui: 2},
           %{app_eui: 3, dev_eui: 4}
@@ -61,8 +67,10 @@ defmodule HeliumConfig.Core.OrganizationTest do
       },
       %{
         net_id: 7,
-        lns_address: "b.testdomain.com",
-        protocol: :gwmp,
+        lns: %GwmpLns{
+          host: "b.testdomain.com",
+          port: 1234
+        },
         euis: [
           %{app_eui: 5, dev_eui: 6},
           %{app_eui: 7, dev_eui: 8}
@@ -103,8 +111,12 @@ defmodule HeliumConfig.Core.OrganizationTest do
       routes: [
         %Route{
           net_id: 7,
-          lns_address: "a.testdomain.com",
-          protocol: :http,
+          lns: %HttpRoamingLns{
+            host: "a.testdomain.com",
+            port: 8080,
+            dedupe_window: 1200,
+            auth_header: "x-helium-auth"
+          },
           euis: [
             %{app_eui: 1, dev_eui: 2},
             %{app_eui: 3, dev_eui: 4}
@@ -116,8 +128,10 @@ defmodule HeliumConfig.Core.OrganizationTest do
         },
         %Route{
           net_id: 7,
-          lns_address: "b.testdomain.com",
-          protocol: :gwmp,
+          lns: %GwmpLns{
+            host: "b.testdomain.com",
+            port: 1234
+          },
           euis: [
             %{app_eui: 5, dev_eui: 6},
             %{app_eui: 7, dev_eui: 8}
