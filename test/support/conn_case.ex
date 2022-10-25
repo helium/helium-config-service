@@ -1,4 +1,4 @@
-defmodule StartOverWeb.ConnCase do
+defmodule HeliumConfigWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -11,7 +11,7 @@ defmodule StartOverWeb.ConnCase do
   we enable the SQL sandbox, so changes done to the database
   are reverted at the end of every test. If you are using
   PostgreSQL, you can even run database tests asynchronously
-  by setting `use StartOverWeb.ConnCase, async: true`, although
+  by setting `use HeliumConfigWeb.ConnCase, async: true`, although
   this option is not recommended for other databases.
   """
 
@@ -22,17 +22,17 @@ defmodule StartOverWeb.ConnCase do
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
-      import StartOverWeb.ConnCase
+      import HeliumConfigWeb.ConnCase
 
-      alias StartOverWeb.Router.Helpers, as: Routes
+      alias HeliumConfigWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
-      @endpoint StartOverWeb.Endpoint
+      @endpoint HeliumConfigWeb.Endpoint
     end
   end
 
   setup tags do
-    StartOver.DataCase.setup_sandbox(tags)
+    HeliumConfig.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

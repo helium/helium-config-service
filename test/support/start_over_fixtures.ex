@@ -1,5 +1,5 @@
-defmodule StartOver.Fixtures do
-  alias StartOver.Core
+defmodule HeliumConfig.Fixtures do
+  alias HeliumConfig.Core
 
   def valid_app_eui_integer do
     0xBEEEEEEE_EEEEEEEF

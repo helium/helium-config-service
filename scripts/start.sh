@@ -14,6 +14,6 @@ do
   sleep 2
 done
 
-bin="_build/prod/rel/start_over/bin/start_over"
-eval "$bin eval \"StartOver.Release.migrate\""
+bin="_build/prod/rel/helium_config/bin/helium_config"
+eval "$bin eval \"HeliumConfig.Release.migrate\""
 exec "$bin" "start"

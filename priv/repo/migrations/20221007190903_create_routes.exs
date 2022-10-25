@@ -1,4 +1,4 @@
-defmodule StartOver.Repo.Migrations.CreateRoutes do
+defmodule HeliumConfig.Repo.Migrations.CreateRoutes do
   use Ecto.Migration
 
   def change do

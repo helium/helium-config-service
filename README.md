@@ -1,4 +1,4 @@
-# StartOver
+# HeliumConfig
 
 To start your Phoenix server:
 

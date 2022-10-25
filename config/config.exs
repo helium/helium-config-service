@@ -7,14 +7,14 @@
 # General application configuration
 import Config
 
-config :start_over,
-  ecto_repos: [StartOver.Repo]
+config :helium_config,
+  ecto_repos: [HeliumConfig.Repo]
 
 # Configures the endpoint
-config :start_over, StartOverWeb.Endpoint,
+config :helium_config, HeliumConfigWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: StartOverWeb.ErrorView, accepts: ~w(json), layout: false],
-  pubsub_server: StartOver.PubSub,
+  render_errors: [view: HeliumConfigWeb.ErrorView, accepts: ~w(json), layout: false],
+  pubsub_server: HeliumConfig.PubSub,
   live_view: [signing_salt: "6eyJ5uKZ"]
 
 # Configures the mailer
@@ -24,7 +24,7 @@ config :start_over, StartOverWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :start_over, StartOver.Mailer, adapter: Swoosh.Adapters.Local
+config :helium_config, HeliumConfig.Mailer, adapter: Swoosh.Adapters.Local
 
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
