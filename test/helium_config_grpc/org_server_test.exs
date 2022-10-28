@@ -24,11 +24,11 @@ defmodule HeliumConfigGRPC.OrgServerTest do
   describe "create" do
     test "returns an OrgV1 given a valid OrgCreateReqV1" do
       assert(0 == length(Repo.all(DB.Organization)))
-      
+
       org =
-	valid_core_organization()
-      |> OrganizationView.organization_params()
-      |> ConfigProto.OrgV1.new()
+        valid_core_organization()
+        |> OrganizationView.organization_params()
+        |> ConfigProto.OrgV1.new()
 
       req = ConfigProto.OrgCreateReqV1.new(%{org: org})
 

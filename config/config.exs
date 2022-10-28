@@ -17,6 +17,8 @@ config :helium_config, HeliumConfigWeb.Endpoint,
   pubsub_server: HeliumConfig.PubSub,
   live_view: [signing_salt: "6eyJ5uKZ"]
 
+config :helium_config, HeliumConfigGRPC.Endpoint, port: 50051
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

@@ -21,12 +21,13 @@ defmodule HeliumConfig.DB.Organization do
   end
 
   def changeset(organization = %__MODULE__{}, core_org = %Core.Organization{}) do
-    fields = %{
-      oui: core_org.oui,
-      owner_wallet_id: core_org.owner_wallet_id,
-      payer_wallet_id: core_org.payer_wallet_id
-    }
-    |> maybe_add_routes(core_org.routes)
+    fields =
+      %{
+        oui: core_org.oui,
+        owner_wallet_id: core_org.owner_wallet_id,
+        payer_wallet_id: core_org.payer_wallet_id
+      }
+      |> maybe_add_routes(core_org.routes)
 
     changeset(organization, fields)
   end

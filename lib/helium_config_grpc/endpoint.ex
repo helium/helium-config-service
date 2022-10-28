@@ -84,9 +84,9 @@ defmodule HeliumConfigGRPC.RouteServer do
   end
 
   def delete(%{__struct__: ConfigProto.RouteDeleteReqV1} = req, _stream) do
-      req.id
-      |> HeliumConfig.delete_route()
-      |> RouteView.route_params()
-      |> ConfigProto.RouteV1.new()
+    req.id
+    |> HeliumConfig.delete_route()
+    |> RouteView.route_params()
+    |> ConfigProto.RouteV1.new()
   end
 end

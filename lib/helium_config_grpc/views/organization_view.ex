@@ -1,5 +1,4 @@
 defmodule HeliumConfigGRPC.OrganizationView do
-
   alias HeliumConfig.Core
 
   def organization_params(%Core.Organization{} = org) do

@@ -45,11 +45,11 @@ defmodule HeliumConfig.DB do
 
     case Repo.delete(current) do
       {:ok, _} ->
-	DB.UpdateNotifier.cast_route_deleted(current)
-	current
+        DB.UpdateNotifier.cast_route_deleted(current)
+        current
 
       {:error, e} ->
-	{:error, e}
+        {:error, e}
     end
   end
 

@@ -116,12 +116,16 @@ defmodule HeliumConfigGRPC.RouteServerTest do
   describe "delete" do
     setup [:create_default_org]
 
-    test "returns a RouteV1 containing the deleted object given a valid RouteDeleteReqV1", %{valid_org: valid_org} do
+    test "returns a RouteV1 containing the deleted object given a valid RouteDeleteReqV1", %{
+      valid_org: valid_org
+    } do
       starting_route_len = length(valid_org.routes)
       route = hd(valid_org.routes)
-      req = RouteDeleteReqV1.new(%{
-	    id: route.id,
-				 })
+
+      req =
+        RouteDeleteReqV1.new(%{
+          id: route.id
+        })
 
       {:ok, channel} = GRPC.Stub.connect("localhost:50051")
 
@@ -131,7 +135,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
       remaining_route_len = length(HeliumConfig.list_routes())
 
-      assert(remaining_route_len == (starting_route_len - 1))
+      assert(remaining_route_len == starting_route_len - 1)
     end
   end
 

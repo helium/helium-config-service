@@ -63,6 +63,10 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  grpc_port = String.to_integer(System.get_env("GRPC_PORT") || "50051")
+
+  config :helium_config, HeliumConfigGRPC.Endpoint, port: grpc_port
+
   # ## Configuring the mailer
   #
   # In production you need to configure the mailer to use a different adapter.
