@@ -284,6 +284,7 @@ defmodule HeliumConfig.Core.RouteTest do
     test "can decode an HTTP Roaming RouteV1 protobuf" do
       bin =
         %{
+          id: "",
           net_id: 7,
           oui: 1,
           max_copies: 2,
@@ -310,6 +311,7 @@ defmodule HeliumConfig.Core.RouteTest do
         |> Route.from_proto()
 
       expected = %Route{
+        id: "",
         oui: 1,
         net_id: 7,
         max_copies: 2,
@@ -334,6 +336,7 @@ defmodule HeliumConfig.Core.RouteTest do
     test "can decode a GWMP RouteV1 protobuf" do
       bin =
         %{
+          id: "",
           net_id: 7,
           oui: 1,
           max_copies: 3,
@@ -361,6 +364,7 @@ defmodule HeliumConfig.Core.RouteTest do
         |> Route.from_proto()
 
       expected = %Route{
+        id: "",
         oui: 1,
         net_id: 7,
         max_copies: 3,
@@ -390,6 +394,7 @@ defmodule HeliumConfig.Core.RouteTest do
     test "can decode a Packet Router RouteV1 protobuf" do
       bin =
         %{
+          id: "",
           net_id: 7,
           oui: 1,
           max_copies: 4,
@@ -416,6 +421,7 @@ defmodule HeliumConfig.Core.RouteTest do
         |> Route.from_proto()
 
       expected = %Route{
+        id: "",
         oui: 1,
         net_id: 7,
         max_copies: 4,

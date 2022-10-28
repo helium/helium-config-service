@@ -21,7 +21,7 @@ defmodule HeliumConfig.DB do
       |> DB.Route.changeset(params)
       |> Repo.insert!()
 
-    DB.UpdateNotifier.notify_cast()
+    DB.UpdateNotifier.cast_route_created(result)
     result
   end
 
@@ -36,8 +36,21 @@ defmodule HeliumConfig.DB do
       |> DB.Route.changeset(params)
       |> Repo.insert_or_update!()
 
-    DB.UpdateNotifier.notify_cast()
+    DB.UpdateNotifier.cast_route_updated(result)
     result
+  end
+
+  def delete_route!(id) do
+    current = get_route!(id)
+
+    case Repo.delete(current) do
+      {:ok, _} ->
+	DB.UpdateNotifier.cast_route_deleted(current)
+	current
+
+      {:error, e} ->
+	{:error, e}
+    end
   end
 
   def list_organizations do
@@ -52,7 +65,6 @@ defmodule HeliumConfig.DB do
       |> DB.Organization.changeset(core_org)
       |> Repo.insert!()
 
-    DB.UpdateNotifier.notify_cast()
     result
   end
 
@@ -77,17 +89,17 @@ defmodule HeliumConfig.DB do
       current
       |> DB.Organization.changeset(new_org)
       |> Repo.insert_or_update!()
+      |> organization_preloads()
 
-    DB.UpdateNotifier.notify_cast()
     result
   end
 
   def delete_organization!(oui) when is_integer(oui) do
-    current = Repo.get!(DB.Organization, oui)
+    current = get_organization!(oui)
 
     case Repo.delete(current) do
       {:ok, _} ->
-        DB.UpdateNotifier.notify_cast()
+        Enum.each(current.routes, &DB.UpdateNotifier.cast_route_deleted(&1))
         :ok
 
       {:error, e} ->

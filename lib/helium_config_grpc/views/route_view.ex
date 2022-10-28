@@ -11,6 +11,7 @@ defmodule HeliumConfigGRPC.RouteView do
 
   def route_params(route = %Route{}) do
     %{
+      id: route.id,
       oui: route.oui,
       net_id: route.net_id,
       max_copies: route.max_copies,

@@ -53,21 +53,45 @@ defmodule HeliumConfig.DB.UpdateNotifier do
     GenServer.call(notifier, {:unsubscribe, pid})
   end
 
-  def notify_call do
-    notify_call(:update_notifier)
+  ##
+  ## Route Created
+  ##
+
+  def call_route_created(route, notifier \\ :update_notifier) do
+    GenServer.call(notifier, {:notify, {:route_created, route}})
   end
 
-  def notify_call(notifier) do
-    GenServer.call(notifier, :notify)
+  def cast_route_created(route, notifier \\ :update_notifier) do
+    GenServer.cast(notifier, {:notify, {:route_created, route}})
   end
 
-  def notify_cast do
-    notify_cast(:update_notifier)
+  ##
+  ## Route Updated
+  ##
+
+  def call_route_updated(route, notifier \\ :update_notifier) do
+    GenServer.call(notifier, {:notify, {:route_updated, route}})
   end
 
-  def notify_cast(notifier) do
-    GenServer.cast(notifier, :notify)
+  def cast_route_updated(route, notifier \\ :update_notifier) do
+    GenServer.cast(notifier, {:notify, {:route_updated, route}})
   end
+
+  ##
+  ## Route Deleted
+  ##
+
+  def call_route_deleted(route, notifier \\ :update_notifier) do
+    GenServer.call(notifier, {:notify, {:route_deleted, route}})
+  end
+
+  def cast_route_deleted(route, notifier \\ :update_notifier) do
+    GenServer.cast(notifier, {:notify, {:route_deleted, route}})
+  end
+
+  ##
+  ## GenServer Callbacks
+  ##
 
   @impl true
   def handle_call({:subscribe, pid}, _from, state) do
@@ -80,10 +104,10 @@ defmodule HeliumConfig.DB.UpdateNotifier do
     {:reply, :ok, State.unsubscribe(state, pid)}
   end
 
-  def handle_call(:notify, _from, state) do
+  def handle_call({:notify, msg}, _from, state) do
     :ok =
       Enum.each(state.subscribers, fn subscriber ->
-        GenServer.call(subscriber, :update)
+        GenServer.call(subscriber, msg)
       end)
 
     {:reply, :ok, state}
@@ -94,10 +118,10 @@ defmodule HeliumConfig.DB.UpdateNotifier do
   end
 
   @impl true
-  def handle_cast(:notify, state) do
+  def handle_cast({:notify, msg}, state) do
     :ok =
       Enum.each(state.subscribers, fn subscriber ->
-        GenServer.cast(subscriber, :update)
+        GenServer.cast(subscriber, msg)
       end)
 
     {:noreply, state}

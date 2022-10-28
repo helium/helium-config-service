@@ -3,6 +3,7 @@ defmodule HeliumConfig.Core.Organization do
 
   alias HeliumConfig.Core.Route
   alias HeliumConfig.DB
+  alias Proto.Helium.Config, as: ConfigProto
 
   def new(params \\ %{}) do
     routes =
@@ -36,8 +37,22 @@ defmodule HeliumConfig.Core.Organization do
     %__MODULE__{
       oui: db_org.oui,
       owner_wallet_id: db_org.owner_wallet_id,
-      payer_wallet_id: db_org.payer_wallet_id,
-      routes: Enum.map(db_org.routes, &Route.from_db/1)
+      payer_wallet_id: db_org.payer_wallet_id
+    }
+    |> maybe_routes_from_db(db_org.routes)
+  end
+
+  defp maybe_routes_from_db(core_org, routes) when is_list(routes) do
+    Map.put(core_org, :routes, Enum.map(routes, &Route.from_db/1))
+  end
+
+  defp maybe_routes_from_db(core_org, _), do: core_org
+
+  def from_proto(%{__struct__: ConfigProto.OrgV1} = proto_org) do
+    %__MODULE__{
+      oui: proto_org.oui,
+      owner_wallet_id: proto_org.owner,
+      payer_wallet_id: proto_org.payer
     }
   end
 end

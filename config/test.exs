@@ -26,5 +26,7 @@ config :helium_config, HeliumConfig.Mailer, adapter: Swoosh.Adapters.Test
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+config :grpc, start_server: true
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

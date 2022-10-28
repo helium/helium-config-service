@@ -48,6 +48,7 @@ defmodule HeliumConfig.Core.Route do
     devaddr_ranges = devaddr_ranges_from_proto(route.devaddr_ranges)
 
     %__MODULE__{
+      id: route.id,
       oui: route.oui,
       net_id: route.net_id,
       max_copies: route.max_copies,

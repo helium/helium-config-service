@@ -32,6 +32,12 @@ defmodule HeliumConfig do
     |> Core.Route.from_db()
   end
 
+  def delete_route(id) do
+    id
+    |> DB.delete_route!()
+    |> Core.Route.from_db()
+  end
+
   def list_organizations do
     DB.list_organizations()
     |> Enum.map(&Core.Organization.from_db/1)

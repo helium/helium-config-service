@@ -12,6 +12,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       got = RouteView.route_params(valid_http_roaming_route())
 
       expected = %{
+        id: "11111111-2222-3333-4444-555555555555",
         oui: 1,
         net_id: 2688,
         max_copies: 2,
@@ -52,6 +53,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       got = RouteView.route_params(valid_gwmp_route())
 
       expected = %{
+        id: "22222222-2222-3333-4444-555555555555",
         oui: 1,
         net_id: 2688,
         max_copies: 2,
@@ -107,6 +109,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       got = RouteView.route_params(valid_packet_router_route())
 
       expected = %{
+        id: "33333333-2222-3333-4444-555555555555",
         oui: 1,
         net_id: 2688,
         max_copies: 2,
