@@ -22,5 +22,6 @@ services:
       - "50051:50051"
     environment:
       - DATABASE_URL=ecto://postgres:postgres@postgres/helium_config_prod
+      - DATABASE_HOST=postgres
       - PHX_HOST=localhost
       - PORT=4000
