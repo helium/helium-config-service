@@ -400,6 +400,19 @@ defmodule HeliumConfig.DBTest do
     end
   end
 
+  describe "DB.list_routes_for_organization" do
+    test "returns a list of DB.Route when route records exist for the given OUI" do
+      valid_org = create_valid_organization()
+      result = DB.list_routes_for_organization(valid_org.oui)
+
+      assert([%DB.Route{}, %DB.Route{}, %DB.Route{}] = result)
+    end
+
+    test "returns an empty list when no records exist for the given OUI" do
+      assert([] == DB.list_routes_for_organization(1))
+    end
+  end
+
   ##
   ## Private Functions
   ##

@@ -22,9 +22,22 @@ defmodule HeliumConfigGRPC.OrgServer do
   end
 
   def create(%{__struct__: ConfigProto.OrgCreateReqV1} = req, _stream) do
-    req.org
-    |> Core.Organization.from_proto()
-    |> HeliumConfig.create_organization()
+    try do
+      req
+      |> Map.get(:org)
+      |> Core.Organization.from_proto()
+      |> HeliumConfig.create_organization()
+      |> OrganizationView.organization_params()
+      |> ConfigProto.OrgV1.new()
+    rescue
+      e in Core.InvalidDataError ->
+        raise GRPC.RPCError, status: GRPC.Status.invalid_argument(), message: e.message
+    end
+  end
+
+  def get(%{__struct__: ConfigProto.OrgGetReqV1} = req, _stream) do
+    req.oui
+    |> HeliumConfig.get_organization()
     |> OrganizationView.organization_params()
     |> ConfigProto.OrgV1.new()
   end
@@ -38,7 +51,10 @@ defmodule HeliumConfigGRPC.RouteServer do
   alias HeliumConfigGRPC.RouteStreamWorker
   alias HeliumConfigGRPC.RouteView
 
-  def stream(%{__struct__: ConfigProto.RouteStreamReqV1}, stream) do
+  def stream(%{__struct__: ConfigProto.RouteStreamReqV1} = req, stream) do
+    req
+    |> maybe_auth_admin()
+
     {:ok, worker} =
       GenServer.start_link(RouteStreamWorker, notifier: :update_notifier, stream: stream)
 
@@ -51,9 +67,12 @@ defmodule HeliumConfigGRPC.RouteServer do
     stream
   end
 
-  def list(%{__struct__: ConfigProto.RouteListReqV1}, _stream) do
+  def list(%{__struct__: ConfigProto.RouteListReqV1} = req, _stream) do
     routes =
-      HeliumConfig.list_routes()
+      req
+      |> maybe_auth()
+      |> Map.get(:oui)
+      |> HeliumConfig.list_routes_for_organization()
       |> Enum.map(&RouteView.route_params/1)
       |> Enum.map(&ConfigProto.RouteV1.new/1)
 
@@ -61,32 +80,333 @@ defmodule HeliumConfigGRPC.RouteServer do
   end
 
   def get(%{__struct__: ConfigProto.RouteGetReqV1} = req, _stream) do
-    req.id
+    req
+    |> maybe_auth()
+    |> Map.get(:id)
     |> HeliumConfig.get_route()
     |> RouteView.route_params()
     |> ConfigProto.RouteV1.new()
   end
 
   def create(%{__struct__: ConfigProto.RouteCreateReqV1} = req, _stream) do
-    req.route
-    |> Core.Route.from_proto()
-    |> HeliumConfig.create_route()
-    |> RouteView.route_params()
-    |> ConfigProto.RouteV1.new()
+    try do
+      req
+      |> maybe_auth()
+      |> Map.get(:route)
+      |> Core.Route.from_proto()
+      |> Core.RouteValidator.validate!()
+      |> HeliumConfig.create_route()
+      |> RouteView.route_params()
+      |> ConfigProto.RouteV1.new()
+    rescue
+      e in Core.InvalidDataError ->
+        raise GRPC.RPCError, status: GRPC.Status.invalid_argument(), message: e.message
+    end
   end
 
   def update(%{__struct__: ConfigProto.RouteUpdateReqV1} = req, _stream) do
-    req.route
-    |> Core.Route.from_proto()
-    |> HeliumConfig.update_route()
+    try do
+      req
+      |> maybe_auth()
+      |> Map.get(:route)
+      |> Core.Route.from_proto()
+      |> HeliumConfig.update_route()
+      |> RouteView.route_params()
+      |> ConfigProto.RouteV1.new()
+    rescue
+      e in Core.InvalidDataError ->
+        raise GRPC.RPCError, status: GRPC.Status.invalid_argument(), message: e.message
+    end
+  end
+
+  def delete(%{__struct__: ConfigProto.RouteDeleteReqV1} = req, _stream) do
+    req
+    |> maybe_auth()
+    |> Map.get(:id)
+    |> HeliumConfig.delete_route()
     |> RouteView.route_params()
     |> ConfigProto.RouteV1.new()
   end
 
-  def delete(%{__struct__: ConfigProto.RouteDeleteReqV1} = req, _stream) do
-    req.id
-    |> HeliumConfig.delete_route()
-    |> RouteView.route_params()
-    |> ConfigProto.RouteV1.new()
+  def maybe_auth(req) do
+    case get_auth_enabled() do
+      true ->
+        req
+        |> authenticate()
+        |> authorize_admin_or_owner()
+
+      false ->
+        req
+    end
+  end
+
+  def maybe_auth_admin(req) do
+    case get_auth_enabled() do
+      true ->
+        req
+        |> authenticate()
+        |> authorize_admin()
+
+      false ->
+        req
+    end
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteCreateReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteCreateReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.owner, req.timestamp)
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteUpdateReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteUpdateReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.owner, req.timestamp)
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteDeleteReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteDeleteReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.owner, req.timestamp)
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteGetReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteGetReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.owner, req.timestamp)
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteListReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteListReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.owner, req.timestamp)
+  end
+
+  def authenticate(%{__struct__: ConfigProto.RouteStreamReqV1} = req) do
+    base_req_bin =
+      req
+      |> Map.put(:signature, nil)
+      |> ConfigProto.RouteStreamReqV1.encode()
+
+    authenticate(req, base_req_bin, req.signature, req.pub_key, req.timestamp)
+  end
+
+  def authenticate(req, req_bin, signature, pubkey_bin, timestamp) do
+    with {:pubkey_bin_valid?, true} <- {:pubkey_bin_valid?, pubkey_bin_valid?(pubkey_bin)},
+         pubkey <- Core.Crypto.b58_to_pubkey(pubkey_bin),
+         {:signature_valid?, true} <-
+           {:signature_valid?, signature_valid?(req_bin, signature, pubkey)},
+         {:signature_not_expired?, true} <-
+           {:signature_not_expired?, signature_not_expired?(timestamp)} do
+      req
+    else
+      {:pubkey_bin_valid?, false} ->
+        raise GRPC.RPCError, status: GRPC.Status.unauthenticated(), message: "Invalid owner"
+
+      {:signature_valid?, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.unauthenticated(),
+          message: "Invalid request signature"
+
+      {:signature_not_expired?, false} ->
+        raise GRPC.RPCError, status: GRPC.Status.permission_denied(), message: "Signature expired"
+
+      other ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.internal(),
+          message: "Internal server error: #{inspect(other)}"
+    end
+  end
+
+  def pubkey_bin_valid?(pubkey_bin) when is_binary(pubkey_bin) do
+    String.length(pubkey_bin) > 25
+  end
+
+  def pubkey_bin_valid?(_), do: false
+
+  def signature_valid?(bin, signature, pubkey) do
+    Core.Crypto.verify(bin, signature, pubkey)
+  end
+
+  def signature_not_expired?(timestamp) do
+    now_msec =
+      DateTime.utc_now()
+      |> DateTime.to_unix(:millisecond)
+
+    time_diff = abs(now_msec - timestamp)
+    time_diff < 60_000
+  end
+
+  def authorize_admin_or_owner(
+        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner} = req
+      ) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(%{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner} = req) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(%{__struct__: ConfigProto.RouteListReqV1, owner: req_owner} = req) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(
+        %{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner} = req
+      ) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(
+        %{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner} = req
+      ) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize(
+        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner, oui: oui, route: route} =
+          req
+      ) do
+    with {:req_oui_matches_route_oui, true} <- {:req_oui_matches_route_oui, oui == route.oui},
+         {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(oui)},
+         {:org_owner_matches_req_owner, true} <-
+           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+      req
+    else
+      {:req_oui_matches_route_oui, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.invalid_argument(),
+          message: "Request OUI does not match Route OUI."
+
+      {:org_owner_matches_req_owner, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Request owner does not match Organization owner."
+
+      other ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.internal(),
+          message: "Internal error: #{inspect(other)}"
+    end
+  end
+
+  def authorize(%{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner, route: route} = req) do
+    with {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(route.oui)},
+         {:org_owner_matches_req_owner, true} <-
+           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+      req
+    else
+      {:org_owner_matches_req_owner, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Request owner does not match Organization owner."
+    end
+  end
+
+  def authorize(%{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner, id: route_id} = req) do
+    with {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
+         {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(db_route.oui)},
+         {:org_owner_matches_req_owner, true} <-
+           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+      req
+    else
+      {:org_owner_matches_req_owner, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Request owner does not match Organization owner."
+    end
+  end
+
+  def authorize(%{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner, id: route_id} = req) do
+    with {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
+         {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(db_route.oui)},
+         {:org_owner_matches_req_owner, true} <-
+           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+      req
+    else
+      {:org_owner_matches_req_owner, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Request owner does not match Organization owner."
+    end
+  end
+
+  def authorize(%{__struct__: ConfigProto.RouteListReqV1, owner: req_owner, oui: oui} = req) do
+    with {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(oui)},
+         {:org_owner_matches_req_owner, true} <-
+           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+      req
+    else
+      {:org_owner_matches_req_owner, false} ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Request owner does not match Organization owner."
+    end
+  end
+
+  def authorize_admin(%{pub_key: pubkey} = req) do
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, pubkey) do
+      true ->
+        req
+
+      false ->
+        raise GRPC.RPCError,
+          status: GRPC.Status.permission_denied(),
+          message: "Permission denied."
+    end
+  end
+
+  defp get_admin_keys do
+    :helium_config
+    |> Application.get_env(HeliumConfigGRPC, [])
+    |> Keyword.get(:admin_keys, [])
+  end
+
+  defp get_auth_enabled do
+    :helium_config
+    |> Application.get_env(HeliumConfigGRPC, [])
+    |> Keyword.get(:auth_enabled, false)
   end
 end

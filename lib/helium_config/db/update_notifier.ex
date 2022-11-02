@@ -14,6 +14,7 @@ defmodule HeliumConfig.DB.UpdateNotifier do
   end
 
   alias __MODULE__.State
+  alias HeliumConfig.Core
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
@@ -57,36 +58,42 @@ defmodule HeliumConfig.DB.UpdateNotifier do
   ## Route Created
   ##
 
-  def call_route_created(route, notifier \\ :update_notifier) do
-    GenServer.call(notifier, {:notify, {:route_created, route}})
+  def call_route_created(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_created, core_route}})
   end
 
-  def cast_route_created(route, notifier \\ :update_notifier) do
-    GenServer.cast(notifier, {:notify, {:route_created, route}})
+  def cast_route_created(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_created, core_route}})
   end
 
   ##
   ## Route Updated
   ##
 
-  def call_route_updated(route, notifier \\ :update_notifier) do
-    GenServer.call(notifier, {:notify, {:route_updated, route}})
+  def call_route_updated(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_updated, core_route}})
   end
 
-  def cast_route_updated(route, notifier \\ :update_notifier) do
-    GenServer.cast(notifier, {:notify, {:route_updated, route}})
+  def cast_route_updated(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_updated, core_route}})
   end
 
   ##
   ## Route Deleted
   ##
 
-  def call_route_deleted(route, notifier \\ :update_notifier) do
-    GenServer.call(notifier, {:notify, {:route_deleted, route}})
+  def call_route_deleted(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_deleted, core_route}})
   end
 
-  def cast_route_deleted(route, notifier \\ :update_notifier) do
-    GenServer.cast(notifier, {:notify, {:route_deleted, route}})
+  def cast_route_deleted(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_deleted, core_route}})
   end
 
   ##

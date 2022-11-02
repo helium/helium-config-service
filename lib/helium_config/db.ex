@@ -3,8 +3,16 @@ defmodule HeliumConfig.DB do
   alias HeliumConfig.DB
   alias HeliumConfig.Repo
 
+  import Ecto.Query
+
   def list_routes do
     DB.Route
+    |> Repo.all()
+    |> Enum.map(&route_preloads/1)
+  end
+
+  def list_routes_for_organization(oui) do
+    from(DB.Route, where: [oui: ^oui])
     |> Repo.all()
     |> Enum.map(&route_preloads/1)
   end

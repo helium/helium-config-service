@@ -37,6 +37,11 @@ defmodule HeliumConfig.Fixtures do
     }
   end
 
+  def valid_core_organization(owner_pubkey: owner_pubkey) do
+    valid_core_organization()
+    |> Map.put(:owner_wallet_id, owner_pubkey)
+  end
+
   def valid_core_route do
     %Core.Route{
       id: nil,
@@ -109,5 +114,10 @@ defmodule HeliumConfig.Fixtures do
       port: 8888,
       protocol_opts: %Core.PacketRouterOpts{}
     })
+  end
+
+  def utc_now_msec do
+    DateTime.utc_now()
+    |> DateTime.to_unix(:millisecond)
   end
 end

@@ -3,8 +3,17 @@ defmodule HeliumConfig.Core.RouteValidator do
 
   alias HeliumConfig.Core.NetID
   alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.InvalidDataError
 
   @net_id_max_value 16_777_215
+
+  def validate!(fields) do
+    case validate(fields) do
+      :ok -> fields
+      {:error, errors} -> raise InvalidDataError, message: "#{inspect(errors)}"
+      {:errors, errors} -> raise InvalidDataError, message: "#{inspect(errors)}"
+    end
+  end
 
   def validate(fields) when is_map(fields) do
     errors =

@@ -14,6 +14,12 @@ defmodule HeliumConfig do
     |> Enum.map(&Core.Route.from_db/1)
   end
 
+  def list_routes_for_organization(oui) do
+    oui
+    |> DB.list_routes_for_organization()
+    |> Enum.map(&Core.Route.from_db/1)
+  end
+
   def get_route(id) do
     id
     |> DB.get_route!()

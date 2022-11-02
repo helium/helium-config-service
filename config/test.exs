@@ -20,6 +20,8 @@ config :helium_config, HeliumConfigWeb.Endpoint,
   secret_key_base: "YtGQrwZ2cAvWmFbk7gmDLTXE36JzPbtNNGOcg4GpN4KW1H3/5PyP0mMXhYat/Rer",
   server: false
 
+config :helium_config, HeliumConfigGRPC, auth_enabled: true
+
 # In test we don't send emails.
 config :helium_config, HeliumConfig.Mailer, adapter: Swoosh.Adapters.Test
 
