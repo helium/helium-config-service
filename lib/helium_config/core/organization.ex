@@ -35,7 +35,7 @@ defmodule HeliumConfig.Core.Organization do
 
   def from_db(%DB.Organization{} = db_org) do
     %__MODULE__{
-      oui: db_org.oui,
+      oui: Decimal.to_integer(db_org.oui),
       owner_wallet_id: db_org.owner_wallet_id,
       payer_wallet_id: db_org.payer_wallet_id
     }

@@ -6,7 +6,7 @@ defmodule HeliumConfig.DB.Organization do
   alias HeliumConfig.Core
   alias HeliumConfig.DB
 
-  @primary_key {:oui, :integer, []}
+  @primary_key {:oui, :decimal, []}
   @derive {Phoenix.Param, key: :oui}
   schema("organizations") do
     field :owner_wallet_id, :string

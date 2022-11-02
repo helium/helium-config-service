@@ -15,9 +15,10 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
     end
 
     test "returns a list of organizations when organizations exist", %{conn: conn} do
-      %DB.Organization{oui: expected_oui} =
-        valid_core_organization()
-        |> DB.create_organization!()
+      core_org = valid_core_organization()
+      DB.create_organization!(core_org)
+
+      expected_oui = core_org.oui
 
       conn = get(conn, Routes.organization_path(conn, :index))
       assert [%{"oui" => ^expected_oui}] = json_response(conn, 200)
@@ -73,7 +74,7 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
   describe "update organization" do
     test "returns 200 given valid inputs", %{conn: conn} do
       valid_org = valid_core_organization()
-      %DB.Organization{oui: oui} = DB.create_organization!(valid_org)
+      %DB.Organization{} = DB.create_organization!(valid_org)
 
       updated_org =
         valid_org
@@ -83,7 +84,9 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
 
       conn = put(conn, Routes.organization_path(conn, :update, valid_org.oui), updated_json)
 
-      assert %{"oui" => ^oui} = json_response(conn, 200)
+      expected_oui = valid_org.oui
+
+      assert %{"oui" => ^expected_oui} = json_response(conn, 200)
     end
 
     test "returns 200 when no organization record exists and inputs are valid", %{conn: conn} do
@@ -101,13 +104,12 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
 
   describe "show organization" do
     test "returns 200 when a record exists for the given OUI", %{conn: conn} do
-      org =
-        valid_core_organization()
-        |> DB.create_organization!()
+      core_org = valid_core_organization()
+      DB.create_organization!(core_org)
 
-      conn = get(conn, Routes.organization_path(conn, :show, org.oui))
+      conn = get(conn, Routes.organization_path(conn, :show, core_org.oui))
 
-      expected_oui = org.oui
+      expected_oui = core_org.oui
 
       assert %{"oui" => ^expected_oui} = json_response(conn, 200)
     end

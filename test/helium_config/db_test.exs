@@ -144,7 +144,8 @@ defmodule HeliumConfig.DBTest do
 
   describe "DB.update_route!/1" do
     test "returns a %DB.Route{} given valid inputs" do
-      valid_org = create_valid_organization()
+      valid_org = valid_core_organization()
+      insert_organization(valid_org)
       existing_db_route = hd(valid_org.routes)
 
       updated_core_route = %Core.Route{
@@ -426,10 +427,13 @@ defmodule HeliumConfig.DBTest do
   end
 
   defp create_valid_organization do
-    valid_org = valid_core_organization()
+    valid_core_organization()
+    |> insert_organization()
+  end
 
+  defp insert_organization(org) do
     %DB.Organization{}
-    |> DB.Organization.changeset(valid_org)
+    |> DB.Organization.changeset(org)
     |> Repo.insert!()
   end
 end

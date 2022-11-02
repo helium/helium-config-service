@@ -9,7 +9,7 @@ defmodule HeliumConfig.DB.Route do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
 
   schema("routes") do
-    field :oui, :integer
+    field :oui, :decimal
     field :net_id, :integer
     field :max_copies, :integer
 

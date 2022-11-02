@@ -3,7 +3,7 @@ defmodule HeliumConfig.Repo.Migrations.CreateRoutes do
 
   def change do
     create table("organizations", primary_key: false) do
-      add :oui, :bigint, primary_key: true
+      add :oui, :numeric, primary_key: true
       add :owner_wallet_id, :string, null: false
       add :payer_wallet_id, :string, null: false
 
@@ -12,7 +12,7 @@ defmodule HeliumConfig.Repo.Migrations.CreateRoutes do
 
     create table("routes", primary_key: false) do
       add :id, :uuid, primary_key: true, null: false
-      add :oui, references(:organizations, column: :oui, on_delete: :delete_all)
+      add :oui, references(:organizations, column: :oui, type: :numeric, on_delete: :delete_all)
       add :net_id, :bigint, null: false
       add :max_copies, :bigint, null: false
 

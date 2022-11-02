@@ -50,10 +50,10 @@ defmodule HeliumConfigWeb.RouteControllerTest do
   describe "create" do
     test "returns 201 given valid inputs", %{conn: conn} do
       core_org = valid_core_organization()
-      org = DB.create_organization!(core_org)
+      DB.create_organization!(core_org)
 
       new_route_params = %{
-        "oui" => org.oui,
+        "oui" => core_org.oui,
         "net_id" => "00000A",
         "max_copies" => 3,
         "server" => %{
@@ -80,17 +80,14 @@ defmodule HeliumConfigWeb.RouteControllerTest do
 
     test "returns 409 given a route that already exists", %{conn: conn} do
       core_org = valid_core_organization()
-      org = DB.create_organization!(core_org)
+      db_org = DB.create_organization!(core_org)
 
-      valid_route_id =
-        org
-        |> Map.get(:routes)
-        |> hd()
-        |> Map.get(:id)
+      route = hd(db_org.routes)
+      valid_route_id = route.id
 
       new_route_params = %{
         "id" => valid_route_id,
-        "oui" => org.oui,
+        "oui" => core_org.oui,
         "net_id" => "00000A",
         "max_copies" => 5,
         "server" => %{

@@ -20,7 +20,7 @@ defmodule HeliumConfig.Core.Route do
   def from_db(%DB.Route{} = db_route) do
     %__MODULE__{
       id: db_route.id,
-      oui: db_route.oui,
+      oui: Decimal.to_integer(db_route.oui),
       net_id: db_route.net_id,
       max_copies: db_route.max_copies,
       server: RouteServer.from_db(db_route.server),
