@@ -206,6 +206,7 @@ defmodule HeliumConfigGRPC.RouteServer do
     authenticate(req, base_req_bin, req.signature, req.pub_key, req.timestamp)
   end
 
+  @dialyzer {:nowarn_function, {:authenticate, 5}}
   def authenticate(req, req_bin, signature, pubkey_bin, timestamp) do
     with {:pubkey_bin_valid?, true} <- {:pubkey_bin_valid?, pubkey_bin_valid?(pubkey_bin)},
          pubkey <- Core.Crypto.b58_to_pubkey(pubkey_bin),
@@ -303,6 +304,7 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
+  @dialyzer {:nowarn_function, {:authorize, 1}}
   def authorize(
         %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner, oui: oui, route: route} =
           req
