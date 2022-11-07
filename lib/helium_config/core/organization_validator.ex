@@ -41,8 +41,10 @@ defmodule HeliumConfig.Core.OrganizationValidator do
     end
   end
 
+  def validate_routes(nil), do: :ok
+
   def validate_routes(routes) do
-    with :ok <- check(is_list(routes), {:error, "routes must be a list"}),
+    with :ok <- check(is_list(routes), {:error, "routes must be a list or nil"}),
          :ok <- all_routes_valid?(routes) do
       :ok
     end

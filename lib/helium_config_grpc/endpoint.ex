@@ -26,6 +26,7 @@ defmodule HeliumConfigGRPC.OrgServer do
       req
       |> Map.get(:org)
       |> Core.Organization.from_proto()
+      |> Core.OrganizationValidator.validate!()
       |> HeliumConfig.create_organization()
       |> OrganizationView.organization_params()
       |> ConfigProto.OrgV1.new()
@@ -110,6 +111,7 @@ defmodule HeliumConfigGRPC.RouteServer do
       |> maybe_auth()
       |> Map.get(:route)
       |> Core.Route.from_proto()
+      |> Core.RouteValidator.validate!()
       |> HeliumConfig.update_route()
       |> RouteView.route_params()
       |> ConfigProto.RouteV1.new()

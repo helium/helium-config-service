@@ -52,7 +52,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
         valid_core_organization()
         |> Map.put(:routes, :foo)
 
-      expected = {:errors, [routes: "routes must be a list"]}
+      expected = {:errors, [routes: "routes must be a list or nil"]}
 
       assert(expected == OrganizationValidator.validate(given))
     end
