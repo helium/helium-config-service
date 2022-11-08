@@ -6,13 +6,22 @@ defmodule HeliumConfig.Core.OrganizationTest do
   alias HeliumConfig.Core.RouteServer
   alias HeliumConfig.Core.Route
   alias HeliumConfig.Core.GwmpOpts
+  alias HeliumConfig.Core.Crypto
+
+  alias Proto.Helium.Config, as: ConfigProto
 
   describe "Organization.from_web/1" do
     test "returns a properly formed %Organization{} given properly formed json params" do
+      %{public: owner_pubkey} = Crypto.generate_key_pair()
+      owner_b58 = Crypto.pubkey_to_b58(owner_pubkey)
+
+      %{public: payer_pubkey} = Crypto.generate_key_pair()
+      payer_b58 = Crypto.pubkey_to_b58(payer_pubkey)
+
       json_params = %{
         "oui" => 1,
-        "owner_wallet_id" => "the_owners_wallet_id",
-        "payer_wallet_id" => "the_payers_wallet_id",
+        "owner_pubkey" => owner_b58,
+        "payer_pubkey" => payer_b58,
         "routes" => [
           %{
             "net_id" => 7,
@@ -61,8 +70,8 @@ defmodule HeliumConfig.Core.OrganizationTest do
 
       expected = %Organization{
         oui: 1,
-        owner_wallet_id: "the_owners_wallet_id",
-        payer_wallet_id: "the_payers_wallet_id",
+        owner_pubkey: owner_pubkey,
+        payer_pubkey: payer_pubkey,
         routes: [
           %Route{
             net_id: 7,
@@ -106,6 +115,39 @@ defmodule HeliumConfig.Core.OrganizationTest do
       }
 
       assert(got == expected)
+    end
+  end
+
+  describe "Organization.from_proto/1" do
+    test "returns a properly formed %Organization{} given a properly formed OrgV1" do
+      big_oui = 0xFFFFFFFF_FFFFFFFF
+      %{public: owner_pubkey} = Crypto.generate_key_pair()
+      owner_pubkey_bin = Crypto.pubkey_to_bin(owner_pubkey)
+
+      %{public: payer_pubkey} = Crypto.generate_key_pair()
+      payer_pubkey_bin = Crypto.pubkey_to_bin(payer_pubkey)
+
+      proto_org =
+        ConfigProto.OrgV1.new(%{
+          oui: big_oui,
+          owner: owner_pubkey_bin,
+          payer: payer_pubkey_bin
+        })
+
+      proto_org_bin = ConfigProto.OrgV1.encode(proto_org)
+
+      got =
+        proto_org_bin
+        |> ConfigProto.OrgV1.decode()
+        |> Organization.from_proto()
+
+      expected = %Organization{
+        oui: big_oui,
+        owner_pubkey: owner_pubkey,
+        payer_pubkey: payer_pubkey
+      }
+
+      assert(expected == got)
     end
   end
 end

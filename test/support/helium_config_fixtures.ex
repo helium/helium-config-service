@@ -25,10 +25,13 @@ defmodule HeliumConfig.Fixtures do
   end
 
   def valid_core_organization do
+    %{public: owner_pubkey} = Core.Crypto.generate_key_pair()
+    %{public: payer_pubkey} = Core.Crypto.generate_key_pair()
+
     %Core.Organization{
       oui: 1,
-      owner_wallet_id: "owners_wallet_id",
-      payer_wallet_id: "payers_wallet_id",
+      owner_pubkey: owner_pubkey,
+      payer_pubkey: payer_pubkey,
       routes: [
         valid_http_roaming_route(),
         valid_gwmp_route(),
@@ -39,7 +42,13 @@ defmodule HeliumConfig.Fixtures do
 
   def valid_core_organization(owner_pubkey: owner_pubkey) do
     valid_core_organization()
-    |> Map.put(:owner_wallet_id, owner_pubkey)
+    |> Map.put(:owner_pubkey, owner_pubkey)
+  end
+
+  def valid_core_organization(owner_pubkey: owner_pubkey, payer_pubkey: payer_pubkey) do
+    valid_core_organization()
+    |> Map.put(:owner_pubkey, owner_pubkey)
+    |> Map.put(:payer_pubkey, payer_pubkey)
   end
 
   def valid_core_route do

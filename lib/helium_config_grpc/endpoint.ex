@@ -211,7 +211,7 @@ defmodule HeliumConfigGRPC.RouteServer do
   @dialyzer {:nowarn_function, {:authenticate, 5}}
   def authenticate(req, req_bin, signature, pubkey_bin, timestamp) do
     with {:pubkey_bin_valid?, true} <- {:pubkey_bin_valid?, pubkey_bin_valid?(pubkey_bin)},
-         pubkey <- Core.Crypto.b58_to_pubkey(pubkey_bin),
+         pubkey <- Core.Crypto.bin_to_pubkey(pubkey_bin),
          {:signature_valid?, true} <-
            {:signature_valid?, signature_valid?(req_bin, signature, pubkey)},
          {:signature_not_expired?, true} <-
@@ -236,11 +236,9 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def pubkey_bin_valid?(pubkey_bin) when is_binary(pubkey_bin) do
-    String.length(pubkey_bin) > 25
+  def pubkey_bin_valid?(bin) do
+    is_binary(bin) and byte_size(bin) > 20
   end
-
-  def pubkey_bin_valid?(_), do: false
 
   def signature_valid?(bin, signature, pubkey) do
     Core.Crypto.verify(bin, signature, pubkey)
@@ -256,51 +254,60 @@ defmodule HeliumConfigGRPC.RouteServer do
   end
 
   def authorize_admin_or_owner(
-        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner} = req
+        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner_bin} = req
       ) do
+    owner_b58 = Core.Crypto.bin_to_b58(req_owner_bin)
     admin_keys = get_admin_keys()
 
-    case Enum.member?(admin_keys, req_owner) do
-      true -> req
-      false -> authorize(req)
-    end
-  end
-
-  def authorize_admin_or_owner(%{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner} = req) do
-    admin_keys = get_admin_keys()
-
-    case Enum.member?(admin_keys, req_owner) do
-      true -> req
-      false -> authorize(req)
-    end
-  end
-
-  def authorize_admin_or_owner(%{__struct__: ConfigProto.RouteListReqV1, owner: req_owner} = req) do
-    admin_keys = get_admin_keys()
-
-    case Enum.member?(admin_keys, req_owner) do
+    case Enum.member?(admin_keys, owner_b58) do
       true -> req
       false -> authorize(req)
     end
   end
 
   def authorize_admin_or_owner(
-        %{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner} = req
+        %{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner_bin} = req
       ) do
+    req_owner_b58 = Core.Crypto.bin_to_b58(req_owner_bin)
     admin_keys = get_admin_keys()
 
-    case Enum.member?(admin_keys, req_owner) do
+    case Enum.member?(admin_keys, req_owner_b58) do
       true -> req
       false -> authorize(req)
     end
   end
 
   def authorize_admin_or_owner(
-        %{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner} = req
+        %{__struct__: ConfigProto.RouteListReqV1, owner: req_owner_bin} = req
       ) do
+    req_owner_b58 = Core.Crypto.bin_to_b58(req_owner_bin)
     admin_keys = get_admin_keys()
 
-    case Enum.member?(admin_keys, req_owner) do
+    case Enum.member?(admin_keys, req_owner_b58) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(
+        %{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner_bin} = req
+      ) do
+    req_owner_b58 = Core.Crypto.bin_to_b58(req_owner_bin)
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner_b58) do
+      true -> req
+      false -> authorize(req)
+    end
+  end
+
+  def authorize_admin_or_owner(
+        %{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner_bin} = req
+      ) do
+    req_owner_b58 = Core.Crypto.bin_to_b58(req_owner_bin)
+    admin_keys = get_admin_keys()
+
+    case Enum.member?(admin_keys, req_owner_b58) do
       true -> req
       false -> authorize(req)
     end
@@ -308,13 +315,14 @@ defmodule HeliumConfigGRPC.RouteServer do
 
   @dialyzer {:nowarn_function, {:authorize, 1}}
   def authorize(
-        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner, oui: oui, route: route} =
+        %{__struct__: ConfigProto.RouteCreateReqV1, owner: req_owner_bin, oui: oui, route: route} =
           req
       ) do
-    with {:req_oui_matches_route_oui, true} <- {:req_oui_matches_route_oui, oui == route.oui},
+    with req_owner_pubkey <- Core.Crypto.bin_to_pubkey(req_owner_bin),
+         {:req_oui_matches_route_oui, true} <- {:req_oui_matches_route_oui, oui == route.oui},
          {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(oui)},
          {:org_owner_matches_req_owner, true} <-
-           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+           {:org_owner_matches_req_owner, db_org.owner_pubkey == req_owner_pubkey} do
       req
     else
       {:req_oui_matches_route_oui, false} ->
@@ -334,10 +342,13 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def authorize(%{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner, route: route} = req) do
-    with {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(route.oui)},
+  def authorize(
+        %{__struct__: ConfigProto.RouteUpdateReqV1, owner: req_owner_bin, route: route} = req
+      ) do
+    with req_owner_pubkey = Core.Crypto.bin_to_pubkey(req_owner_bin),
+         {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(route.oui)},
          {:org_owner_matches_req_owner, true} <-
-           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+           {:org_owner_matches_req_owner, db_org.owner_pubkey == req_owner_pubkey} do
       req
     else
       {:org_owner_matches_req_owner, false} ->
@@ -347,11 +358,14 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def authorize(%{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner, id: route_id} = req) do
-    with {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
+  def authorize(
+        %{__struct__: ConfigProto.RouteDeleteReqV1, owner: req_owner_bin, id: route_id} = req
+      ) do
+    with req_owner_pubkey <- Core.Crypto.bin_to_pubkey(req_owner_bin),
+         {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
          {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(db_route.oui)},
          {:org_owner_matches_req_owner, true} <-
-           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+           {:org_owner_matches_req_owner, db_org.owner_pubkey == req_owner_pubkey} do
       req
     else
       {:org_owner_matches_req_owner, false} ->
@@ -361,11 +375,14 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def authorize(%{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner, id: route_id} = req) do
-    with {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
+  def authorize(
+        %{__struct__: ConfigProto.RouteGetReqV1, owner: req_owner_bin, id: route_id} = req
+      ) do
+    with req_owner_pubkey <- Core.Crypto.bin_to_pubkey(req_owner_bin),
+         {:db_route, db_route} <- {:db_route, HeliumConfig.get_route(route_id)},
          {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(db_route.oui)},
          {:org_owner_matches_req_owner, true} <-
-           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+           {:org_owner_matches_req_owner, db_org.owner_pubkey == req_owner_pubkey} do
       req
     else
       {:org_owner_matches_req_owner, false} ->
@@ -375,10 +392,11 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def authorize(%{__struct__: ConfigProto.RouteListReqV1, owner: req_owner, oui: oui} = req) do
-    with {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(oui)},
+  def authorize(%{__struct__: ConfigProto.RouteListReqV1, owner: req_owner_bin, oui: oui} = req) do
+    with req_owner_pubkey <- Core.Crypto.bin_to_pubkey(req_owner_bin),
+         {:db_org, db_org} <- {:db_org, HeliumConfig.get_organization(oui)},
          {:org_owner_matches_req_owner, true} <-
-           {:org_owner_matches_req_owner, db_org.owner_wallet_id == req_owner} do
+           {:org_owner_matches_req_owner, db_org.owner_pubkey == req_owner_pubkey} do
       req
     else
       {:org_owner_matches_req_owner, false} ->
@@ -388,10 +406,11 @@ defmodule HeliumConfigGRPC.RouteServer do
     end
   end
 
-  def authorize_admin(%{pub_key: pubkey} = req) do
+  def authorize_admin(%{pub_key: pubkey_bin} = req) do
+    pubkey_b58 = Core.Crypto.bin_to_b58(pubkey_bin)
     admin_keys = get_admin_keys()
 
-    case Enum.member?(admin_keys, pubkey) do
+    case Enum.member?(admin_keys, pubkey_b58) do
       true ->
         req
 

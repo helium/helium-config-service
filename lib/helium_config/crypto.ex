@@ -38,4 +38,24 @@ defmodule HeliumConfig.Core.Crypto do
     |> :erlang.binary_to_list()
     |> :libp2p_crypto.b58_to_pubkey()
   end
+
+  def pubkey_to_bin(pub_key) do
+    :libp2p_crypto.pubkey_to_bin(pub_key)
+  end
+
+  def bin_to_pubkey(bin) do
+    :libp2p_crypto.bin_to_pubkey(bin)
+  end
+
+  def bin_to_b58(bin) do
+    bin
+    |> bin_to_pubkey()
+    |> pubkey_to_b58()
+  end
+
+  def b58_to_bin(b58) do
+    b58
+    |> b58_to_pubkey()
+    |> pubkey_to_bin()
+  end
 end

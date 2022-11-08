@@ -1,7 +1,7 @@
 defmodule HeliumConfig.Core.Organization do
-  defstruct [:oui, :owner_wallet_id, :payer_wallet_id, :routes]
+  defstruct [:oui, :owner_pubkey, :payer_pubkey, :routes]
 
-  alias HeliumConfig.Core.Route
+  alias HeliumConfig.Core
   alias HeliumConfig.DB
   alias Proto.Helium.Config, as: ConfigProto
 
@@ -9,7 +9,7 @@ defmodule HeliumConfig.Core.Organization do
     routes =
       params
       |> Map.get(:routes, [])
-      |> Enum.map(&Route.new/1)
+      |> Enum.map(&Core.Route.new/1)
 
     params = Map.put(params, :routes, routes)
 
@@ -22,12 +22,14 @@ defmodule HeliumConfig.Core.Organization do
       %__MODULE__{},
       fn
         {"oui", oui}, acc -> Map.put(acc, :oui, oui_from_web(oui))
-        {"owner_wallet_id", id}, acc -> Map.put(acc, :owner_wallet_id, id)
-        {"payer_wallet_id", id}, acc -> Map.put(acc, :payer_wallet_id, id)
-        {"routes", routes}, acc -> Map.put(acc, :routes, Enum.map(routes, &Route.from_web/1))
+        {"owner_pubkey", id}, acc -> Map.put(acc, :owner_pubkey, pubkey_from_web(id))
+        {"payer_pubkey", id}, acc -> Map.put(acc, :payer_pubkey, pubkey_from_web(id))
+        {"routes", routes}, acc -> Map.put(acc, :routes, Enum.map(routes, &Core.Route.from_web/1))
       end
     )
   end
+
+  defp pubkey_from_web(b58), do: Core.Crypto.b58_to_pubkey(b58)
 
   def oui_from_web(oui) when is_integer(oui), do: oui
 
@@ -36,14 +38,14 @@ defmodule HeliumConfig.Core.Organization do
   def from_db(%DB.Organization{} = db_org) do
     %__MODULE__{
       oui: Decimal.to_integer(db_org.oui),
-      owner_wallet_id: db_org.owner_wallet_id,
-      payer_wallet_id: db_org.payer_wallet_id
+      owner_pubkey: Core.Crypto.b58_to_pubkey(db_org.owner_pubkey),
+      payer_pubkey: Core.Crypto.b58_to_pubkey(db_org.payer_pubkey)
     }
     |> maybe_routes_from_db(db_org.routes)
   end
 
   defp maybe_routes_from_db(core_org, routes) when is_list(routes) do
-    Map.put(core_org, :routes, Enum.map(routes, &Route.from_db/1))
+    Map.put(core_org, :routes, Enum.map(routes, &Core.Route.from_db/1))
   end
 
   defp maybe_routes_from_db(core_org, _), do: core_org
@@ -51,8 +53,12 @@ defmodule HeliumConfig.Core.Organization do
   def from_proto(%{__struct__: ConfigProto.OrgV1} = proto_org) do
     %__MODULE__{
       oui: proto_org.oui,
-      owner_wallet_id: proto_org.owner,
-      payer_wallet_id: proto_org.payer
+      owner_pubkey: pubkey_bin_from_proto(proto_org.owner),
+      payer_pubkey: pubkey_bin_from_proto(proto_org.payer)
     }
+  end
+
+  defp pubkey_bin_from_proto(proto_id) do
+    HeliumConfig.Core.Crypto.bin_to_pubkey(proto_id)
   end
 end

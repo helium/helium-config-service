@@ -1,6 +1,7 @@
 defmodule HeliumConfigWeb.OrganizationControllerTest do
   use HeliumConfigWeb.ConnCase
 
+  alias HeliumConfig.Core
   alias HeliumConfig.DB
   alias HeliumConfig.Repo
 
@@ -76,9 +77,11 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
       valid_org = valid_core_organization()
       %DB.Organization{} = DB.create_organization!(valid_org)
 
+      %{public: new_pubkey} = Core.Crypto.generate_key_pair()
+
       updated_org =
         valid_org
-        |> Map.put(:owner_wallet_id, "updated_wallet_id")
+        |> Map.put(:owner_pubkey, new_pubkey)
 
       updated_json = OrganizationView.organization_json(updated_org)
 

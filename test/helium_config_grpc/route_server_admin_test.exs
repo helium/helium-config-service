@@ -27,12 +27,12 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
     setup [:create_default_org]
 
     test "returns a stream of RouteStreamResV1 given a valid RouteStreamReqV1", %{
-      admin_pubkey_b58: pubkey,
+      admin_pubkey_bin: pubkey_bin,
       admin_sigfun: sigfun
     } do
       req =
         %{
-          pub_key: pubkey,
+          pub_key: pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteStreamReqV1.new()
@@ -47,12 +47,12 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     test "returns an RPC 'permission_denied' given a RouteStreamReqV1 signed by a non-admin key" do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       req =
         %{
-          pub_key: bad_pubkey_b58,
+          pub_key: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteStreamReqV1.new()
@@ -72,11 +72,11 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
     test "returns an RPC 'unauthenticated' status given a RouteStreamReqV1 with an invalid signature",
          %{admin_sigfun: sigfun} do
       %{public: bad_pubkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
 
       req =
         %{
-          pub_key: bad_pubkey_b58,
+          pub_key: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteStreamReqV1.new()
@@ -101,10 +101,11 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     test "returns a RouteV1 given a valid RouteCreateReqV1 signed by an admin key", %{
       valid_org: valid_org,
-      admin_pubkey_b58: pubkey,
+      admin_pubkey: pubkey,
       admin_sigfun: sigfun
     } do
       oui = valid_org.oui
+      pubkey_bin = Core.Crypto.pubkey_to_bin(pubkey)
 
       new_route =
         %{
@@ -132,7 +133,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
         %{
           route: new_route,
           oui: oui,
-          owner: pubkey,
+          owner: pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteCreateReqV1.new()
@@ -151,16 +152,17 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     test "returns a RouteV1 given a valid RouteGetReqV1 signed by an admin key", %{
       valid_org: valid_org,
-      admin_pubkey_b58: pubkey,
+      admin_pubkey: pubkey,
       admin_sigfun: sigfun
     } do
       {:ok, channel} = GRPC.Stub.connect("localhost:50051")
       route = hd(valid_org.routes)
+      pubkey_bin = Core.Crypto.pubkey_to_bin(pubkey)
 
       req =
         %{
           id: route.id,
-          owner: pubkey,
+          owner: pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteGetReqV1.new()
@@ -176,7 +178,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     test "returns a RouteListResV1 given a valid RouteListReqV1 signed by an admin key", %{
       valid_org: valid_org,
-      admin_pubkey_b58: pubkey,
+      admin_pubkey_bin: pubkey_bin,
       admin_sigfun: sigfun
     } do
       {:ok, channel} = GRPC.Stub.connect("localhost:50051")
@@ -184,7 +186,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
       req =
         %{
           oui: valid_org.oui,
-          owner: pubkey,
+          owner: pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteListReqV1.new()
@@ -202,7 +204,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     test "returns an updated RouteV1 given a valid RouteUpdateReqV1 signed by an admin key", %{
       valid_org: valid_org,
-      admin_pubkey_b58: pubkey,
+      admin_pubkey_bin: pubkey_bin,
       admin_sigfun: sigfun
     } do
       route = hd(valid_org.routes)
@@ -220,7 +222,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
         %{
           oui: route.oui,
           route: route_params,
-          owner: pubkey,
+          owner: pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteUpdateReqV1.new()
@@ -240,7 +242,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
     test "returns a RouteV1 containing the deleted object given a valid RouteDeleteReqV1 signed by an admin key",
          %{
            valid_org: valid_org,
-           admin_pubkey_b58: pubkey,
+           admin_pubkey_bin: pubkey,
            admin_sigfun: sigfun
          } do
       starting_route_len = length(valid_org.routes)
@@ -336,6 +338,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
   defp create_admin_keys(ctx) do
     %{public: pubkey, secret: privkey} = HeliumConfig.Core.Crypto.generate_key_pair()
     pubkey_b58 = Core.Crypto.pubkey_to_b58(pubkey)
+    pubkey_bin = Core.Crypto.pubkey_to_bin(pubkey)
     sigfun = Core.Crypto.mk_sig_fun(privkey)
 
     Application.put_env(:helium_config, HeliumConfigGRPC,
@@ -347,21 +350,23 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
     ctx
     |> Map.put(:admin_pubkey, pubkey)
     |> Map.put(:admin_pubkey_b58, pubkey_b58)
+    |> Map.put(:admin_pubkey_bin, pubkey_bin)
     |> Map.put(:admin_sigfun, sigfun)
   end
 
   defp create_default_org(ctx) do
     %{public: owner_pubkey, secret: owner_privkey} = Core.Crypto.generate_key_pair()
-    owner_pubkey_b58 = Core.Crypto.pubkey_to_b58(owner_pubkey)
     owner_sigfun = Core.Crypto.mk_sig_fun(owner_privkey)
+    owner_pubkey_bin = Core.Crypto.pubkey_to_bin(owner_pubkey)
 
     valid_org =
-      valid_core_organization(owner_pubkey: owner_pubkey_b58)
+      valid_core_organization(owner_pubkey: owner_pubkey)
       |> HeliumConfig.create_organization()
 
     ctx
     |> Map.put(:valid_org, valid_org)
     |> Map.put(:owner_pubkey, owner_pubkey)
+    |> Map.put(:owner_pubkey_bin, owner_pubkey_bin)
     |> Map.put(:owner_sigfun, owner_sigfun)
   end
 end

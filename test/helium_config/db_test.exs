@@ -356,10 +356,13 @@ defmodule HeliumConfig.DBTest do
       valid_db_org = create_valid_organization()
       valid_core_org = Core.Organization.from_db(valid_db_org)
 
+      %{public: new_owner_pubkey} = Core.Crypto.generate_key_pair()
+      %{public: new_payer_pubkey} = Core.Crypto.generate_key_pair()
+
       updated_core_org =
         valid_core_org
-        |> Map.put(:owner_wallet_id, "updated_owner_wallet")
-        |> Map.put(:payer_wallet_id, "updated_payer_wallet")
+        |> Map.put(:owner_pubkey, new_owner_pubkey)
+        |> Map.put(:payer_pubkey, new_payer_pubkey)
 
       updated_db_org = DB.update_organization!(updated_core_org)
 

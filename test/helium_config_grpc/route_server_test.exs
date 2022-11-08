@@ -19,6 +19,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
     test "returns a RouteListResV1 given a valid RouteListReqV1", %{
       valid_org: valid_org,
+      owner_pubkey_bin: owner_pubkey_bin,
       owner_sigfun: sigfun
     } do
       {:ok, channel} = GRPC.Stub.connect("localhost:50051")
@@ -26,7 +27,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           oui: valid_org.oui,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteListReqV1.new()
@@ -38,16 +39,16 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       assert(length(valid_org.routes) == length(res.routes))
     end
 
-    test "returns an RPC 'permission_denied' status given a RouteListReqV1 where the 'owner' does not match the owner_wallet_id of the referenced Organization",
+    test "returns an RPC 'permission_denied' status given a RouteListReqV1 where the 'owner' does not match the owner_pubkey of the referenced Organization",
          %{valid_org: valid_org} do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       req =
         %{
           oui: valid_org.oui,
-          owner: bad_pubkey_b58,
+          owner: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteListReqV1.new()
@@ -72,6 +73,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
     test "returns a RouteV1 given a valid RouteGetReqV1 signed by the Organization owner", %{
       valid_org: valid_org,
+      owner_pubkey_bin: owner_pubkey_bin,
       owner_sigfun: sigfun
     } do
       {:ok, channel} = GRPC.Stub.connect("localhost:50051")
@@ -80,7 +82,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteGetReqV1.new()
@@ -91,7 +93,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     end
 
     test "returns an RPC 'unauthenticated' status given a RouteGetReqV1 with an invalid signature",
-         %{valid_org: valid_org} do
+         %{valid_org: valid_org, owner_pubkey_bin: owner_pubkey_bin} do
       %{secret: bad_privkey} = Core.Crypto.generate_key_pair()
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
@@ -100,7 +102,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteGetReqV1.new()
@@ -119,10 +121,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       )
     end
 
-    test "returns an RPC 'permission_denied' status given a RouteGetReqV1 where the 'owner' does not match the owner_wallet_id of the referenced Organization",
+    test "returns an RPC 'permission_denied' status given a RouteGetReqV1 where the 'owner' does not match the owner_pubkey of the referenced Organization",
          %{valid_org: valid_org} do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       route = hd(valid_org.routes)
@@ -130,7 +132,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: bad_pubkey_b58,
+          owner: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteGetReqV1.new()
@@ -155,6 +157,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
     test "returns a RouteV1 given a valid RouteCreateReqV1 signed by the Organization owner", %{
       valid_org: valid_org,
+      owner_pubkey_bin: owner_pubkey_bin,
       owner_sigfun: sigfun
     } do
       oui = valid_org.oui
@@ -185,7 +188,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           route: new_route,
           oui: oui,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteCreateReqV1.new()
@@ -199,7 +202,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     end
 
     test "returns an RPC 'unauthenticated' status given a RouteCreateReqV1 with an invalid signature",
-         %{valid_org: valid_org} do
+         %{
+           valid_org: valid_org,
+           owner_pubkey_bin: owner_pubkey_bin
+         } do
       %{secret: bad_key} = Core.Crypto.generate_key_pair()
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_key)
 
@@ -231,7 +237,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           route: new_route,
           oui: oui,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteCreateReqV1.new()
@@ -251,7 +257,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     end
 
     test "returns an RPC 'invalid_argument' status given a RouteCreateReqV1 where the 'oui' field does not match the OUI of the Route",
-         %{valid_org: valid_org, owner_sigfun: sigfun} do
+         %{valid_org: valid_org, owner_sigfun: sigfun, owner_pubkey_bin: owner_pubkey_bin} do
       oui = valid_org.oui
       bad_oui = oui + 1
 
@@ -281,7 +287,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           route: new_route,
           oui: oui,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteCreateReqV1.new()
@@ -300,10 +306,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       )
     end
 
-    test "returns an RPC 'permission_denied' status given a RouteCreateReqV1 where 'owner' field does not match the 'owner_wallet_id' of the referenced Organization",
+    test "returns an RPC 'permission_denied' status given a RouteCreateReqV1 where 'owner' field does not match the 'owner_pubkey' of the referenced Organization",
          %{valid_org: valid_org} do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_bin = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       oui = valid_org.oui
@@ -354,7 +360,8 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     test "returns an updated RouteV1 given a valid RouteUpdateReqV1 signed by the Organization owner",
          %{
            valid_org: valid_org,
-           owner_sigfun: sigfun
+           owner_sigfun: sigfun,
+           owner_pubkey_bin: owner_pubkey_bin
          } do
       route = hd(valid_org.routes)
 
@@ -372,7 +379,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           oui: route.oui,
           route: route_params,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteUpdateReqV1.new()
@@ -388,7 +395,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     test "returns an RPC 'unauthenticated' status given a RouteUpdatedReqV1 with an invalid signature",
          %{valid_org: valid_org, owner_sigfun: sigfun} do
       %{public: bad_pubkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
 
       route = hd(valid_org.routes)
 
@@ -406,7 +413,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           oui: route.oui,
           route: route_params,
-          owner: bad_pubkey_b58,
+          owner: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteUpdateReqV1.new()
@@ -425,10 +432,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       )
     end
 
-    test "returns an RPC 'permission_dened' status given a RouteUpdatedReqV1 where 'owner' does not match the 'owner_wallet_id' of the referenced Organization",
+    test "returns an RPC 'permission_dened' status given a RouteUpdatedReqV1 where 'owner' does not match the 'owner_pubkey' of the referenced Organization",
          %{valid_org: valid_org} do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       route = hd(valid_org.routes)
@@ -447,7 +454,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
         %{
           oui: route.oui,
           route: route_params,
-          owner: bad_pubkey_b58,
+          owner: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteUpdateReqV1.new()
@@ -472,7 +479,8 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
     test "returns a RouteV1 containing the deleted object given a valid RouteDeleteReqV1", %{
       valid_org: valid_org,
-      owner_sigfun: sigfun
+      owner_sigfun: sigfun,
+      owner_pubkey_bin: owner_pubkey_bin
     } do
       starting_route_len = length(valid_org.routes)
       route = hd(valid_org.routes)
@@ -480,7 +488,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteDeleteReqV1.new()
@@ -498,7 +506,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
     end
 
     test "returns an RPC 'unauthenticated' status given a RouteDeleteReqV1 with an invalid signature",
-         %{valid_org: valid_org} do
+         %{
+           valid_org: valid_org,
+           owner_pubkey_bin: owner_pubkey_bin
+         } do
       %{secret: bad_privkey} = Core.Crypto.generate_key_pair()
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
@@ -507,7 +518,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: valid_org.owner_wallet_id,
+          owner: owner_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteDeleteReqV1.new()
@@ -549,10 +560,10 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       )
     end
 
-    test "returns an RPC 'permission_denied' status given a RouteDeleteReqV1 where the 'owner' does not match the owner_wallet_id of the referenced Organization",
+    test "returns an RPC 'permission_denied' status given a RouteDeleteReqV1 where the 'owner' does not match the owner_pubkey of the referenced Organization",
          %{valid_org: valid_org} do
       %{public: bad_pubkey, secret: bad_privkey} = Core.Crypto.generate_key_pair()
-      bad_pubkey_b58 = Core.Crypto.pubkey_to_b58(bad_pubkey)
+      bad_pubkey_bin = Core.Crypto.pubkey_to_bin(bad_pubkey)
       bad_sigfun = Core.Crypto.mk_sig_fun(bad_privkey)
 
       route = hd(valid_org.routes)
@@ -560,7 +571,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       req =
         %{
           id: route.id,
-          owner: bad_pubkey_b58,
+          owner: bad_pubkey_bin,
           timestamp: utc_now_msec()
         }
         |> RouteDeleteReqV1.new()
@@ -582,16 +593,17 @@ defmodule HeliumConfigGRPC.RouteServerTest do
 
   defp create_default_org(ctx) do
     %{public: owner_pubkey, secret: owner_privkey} = Core.Crypto.generate_key_pair()
-    owner_pubkey_b58 = Core.Crypto.pubkey_to_b58(owner_pubkey)
     owner_sigfun = Core.Crypto.mk_sig_fun(owner_privkey)
+    owner_pubkey_bin = Core.Crypto.pubkey_to_bin(owner_pubkey)
 
     valid_org =
-      valid_core_organization(owner_pubkey: owner_pubkey_b58)
+      valid_core_organization(owner_pubkey: owner_pubkey)
       |> HeliumConfig.create_organization()
 
     ctx
     |> Map.put(:valid_org, valid_org)
     |> Map.put(:owner_pubkey, owner_pubkey)
+    |> Map.put(:owner_pubkey_bin, owner_pubkey_bin)
     |> Map.put(:owner_sigfun, owner_sigfun)
   end
 

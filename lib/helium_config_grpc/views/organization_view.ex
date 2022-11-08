@@ -4,8 +4,8 @@ defmodule HeliumConfigGRPC.OrganizationView do
   def organization_params(%Core.Organization{} = org) do
     %{
       oui: org.oui,
-      owner: org.owner_wallet_id,
-      payer: org.payer_wallet_id
+      owner: Core.Crypto.pubkey_to_bin(org.owner_pubkey),
+      payer: Core.Crypto.pubkey_to_bin(org.payer_pubkey)
     }
   end
 end

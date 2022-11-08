@@ -9,8 +9,8 @@ defmodule HeliumConfig.DB.Organization do
   @primary_key {:oui, :decimal, []}
   @derive {Phoenix.Param, key: :oui}
   schema("organizations") do
-    field :owner_wallet_id, :string
-    field :payer_wallet_id, :string
+    field :owner_pubkey, :string
+    field :payer_pubkey, :string
 
     has_many :routes, DB.Route,
       foreign_key: :oui,
@@ -24,8 +24,8 @@ defmodule HeliumConfig.DB.Organization do
     fields =
       %{
         oui: core_org.oui,
-        owner_wallet_id: core_org.owner_wallet_id,
-        payer_wallet_id: core_org.payer_wallet_id
+        owner_pubkey: Core.Crypto.pubkey_to_b58(core_org.owner_pubkey),
+        payer_pubkey: Core.Crypto.pubkey_to_b58(core_org.payer_pubkey)
       }
       |> maybe_add_routes(core_org.routes)
 
@@ -34,7 +34,7 @@ defmodule HeliumConfig.DB.Organization do
 
   def changeset(organization = %__MODULE__{}, fields = %{}) do
     organization
-    |> cast(fields, [:oui, :owner_wallet_id, :payer_wallet_id])
+    |> cast(fields, [:oui, :owner_pubkey, :payer_pubkey])
     |> unique_constraint(:oui)
     |> cast_assoc(:routes)
   end

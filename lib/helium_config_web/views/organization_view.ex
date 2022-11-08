@@ -1,6 +1,7 @@
 defmodule HeliumConfigWeb.OrganizationView do
   use HeliumConfigWeb, :view
 
+  alias HeliumConfig.Core
   alias HeliumConfigWeb.RouteView
 
   def render("organizations.json", %{organizations: orgs}) do
@@ -14,8 +15,8 @@ defmodule HeliumConfigWeb.OrganizationView do
   def organization_json(org) do
     %{
       oui: org.oui,
-      owner_wallet_id: org.owner_wallet_id,
-      payer_wallet_id: org.payer_wallet_id,
+      owner_pubkey: Core.Crypto.pubkey_to_b58(org.owner_pubkey),
+      payer_pubkey: Core.Crypto.pubkey_to_b58(org.payer_pubkey),
       routes: Enum.map(org.routes, &RouteView.organization_route_json/1)
     }
   end

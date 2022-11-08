@@ -1,19 +1,26 @@
 defmodule HeliumConfigWeb.OrganizationViewTest do
   use ExUnit.Case
 
+  alias HeliumConfig.Core
   alias HeliumConfigWeb.OrganizationView
 
   import HeliumConfig.Fixtures
 
   describe "organization_json/1" do
     test "returns a correct rendering of a Core.Organiztion" do
-      valid_org = valid_core_organization()
+      %{public: owner_pubkey} = Core.Crypto.generate_key_pair()
+      owner_b58 = Core.Crypto.pubkey_to_b58(owner_pubkey)
+
+      %{public: payer_pubkey} = Core.Crypto.generate_key_pair()
+      payer_b58 = Core.Crypto.pubkey_to_b58(payer_pubkey)
+
+      valid_org = valid_core_organization(owner_pubkey: owner_pubkey, payer_pubkey: payer_pubkey)
       got = OrganizationView.organization_json(valid_org)
 
       expected = %{
         oui: 1,
-        owner_wallet_id: "owners_wallet_id",
-        payer_wallet_id: "payers_wallet_id",
+        owner_pubkey: owner_b58,
+        payer_pubkey: payer_b58,
         routes: [
           %{
             id: "11111111-2222-3333-4444-555555555555",

@@ -27,22 +27,22 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
       assert(expected == OrganizationValidator.validate(given))
     end
 
-    test "returns an error when given an invalid owner wallet id" do
+    test "returns an error when given an invalid owner pubkey" do
       given =
         valid_core_organization()
-        |> Map.put(:owner_wallet_id, nil)
+        |> Map.put(:owner_pubkey, nil)
 
-      expected = {:errors, [owner_wallet_id: "wallet ID must be a string"]}
+      expected = {:errors, [owner_pubkey: "pubkey must be type :ecc_compact or :ed25519"]}
 
       assert(expected == OrganizationValidator.validate(given))
     end
 
-    test "returns an error when given an invalid payer wallet id" do
+    test "returns an error when given an invalid payer pubkey" do
       given =
         valid_core_organization()
-        |> Map.put(:payer_wallet_id, nil)
+        |> Map.put(:payer_pubkey, nil)
 
-      expected = {:errors, [payer_wallet_id: "wallet ID must be a string"]}
+      expected = {:errors, [payer_pubkey: "pubkey must be type :ecc_compact or :ed25519"]}
 
       assert(expected == OrganizationValidator.validate(given))
     end

@@ -18,8 +18,8 @@ defmodule HeliumConfig.Core.OrganizationValidator do
     errors =
       []
       |> require(fields, :oui, &validate_oui/1)
-      |> require(fields, :owner_wallet_id, &validate_wallet_id/1)
-      |> require(fields, :payer_wallet_id, &validate_wallet_id/1)
+      |> require(fields, :owner_pubkey, &validate_pubkey/1)
+      |> require(fields, :payer_pubkey, &validate_pubkey/1)
       |> require(fields, :routes, &validate_routes/1)
 
     case errors do
@@ -35,11 +35,11 @@ defmodule HeliumConfig.Core.OrganizationValidator do
     end
   end
 
-  def validate_wallet_id(id) do
-    with :ok <- check(is_binary(id), {:error, "wallet ID must be a string"}) do
-      :ok
-    end
-  end
+  def validate_pubkey({:ecc_compact, _}), do: :ok
+
+  def validate_pubkey({:ed25519, _}), do: :ok
+
+  def validate_pubkey(_), do: {:error, "pubkey must be type :ecc_compact or :ed25519"}
 
   def validate_routes(nil), do: :ok
 
