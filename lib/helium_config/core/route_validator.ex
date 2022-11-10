@@ -23,7 +23,7 @@ defmodule HeliumConfig.Core.RouteValidator do
 
     case errors do
       [] -> :ok
-      _ -> {:errors, errors}
+      _ -> errors
     end
   end
 
@@ -45,13 +45,28 @@ defmodule HeliumConfig.Core.RouteValidator do
       |> Enum.reduce([], fn range, acc ->
         case validate_devaddr_range(range) do
           :ok -> acc
-          {:error, e} -> [{:error, e} | acc]
+          {:error, e} -> [e | acc]
         end
       end)
 
     case errors do
       [] -> :ok
       _ -> {:errors, errors}
+    end
+  end
+
+  def validate_devaddr_range({%Devaddr{} = s, %Devaddr{} = e}) do
+    with :ok <-
+           check(
+             s.nwk_id == e.nwk_id,
+             {:error, "start and end addr in {#{s}, #{e}} must have the same NwkID"}
+           ),
+         :ok <-
+           check(
+             s.nwk_addr < e.nwk_addr,
+             {:error, "start NwkAddr must be less than end NwkAddr in {#{s}, #{e}}"}
+           ) do
+      :ok
     end
   end
 
@@ -90,6 +105,22 @@ defmodule HeliumConfig.Core.RouteValidator do
         :ok -> acc
       end
     end)
+  end
+
+  def validate_net_id_and_devaddr_range(net_id_bin, {%Devaddr{} = s, %Devaddr{} = e}) do
+    with net_id <- NetID.from_integer(net_id_bin),
+         :ok <-
+           check(
+             s.nwk_id == net_id.nwk_id,
+             {:error, "start addr in {#{s}, #{e}} must have the same NwkID as #{net_id}"}
+           ),
+         :ok <-
+           check(
+             e.nwk_id == net_id.nwk_id,
+             {:error, "end addr in {#{s}, #{e}} must have the same NwkID as #{net_id}"}
+           ) do
+      :ok
+    end
   end
 
   def validate_net_id_and_devaddr_range(net_id_bin, {start_addr_bin, end_addr_bin}) do

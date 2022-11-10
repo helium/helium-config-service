@@ -7,7 +7,11 @@ defmodule HeliumConfig.Core.RouteTest do
   alias HeliumConfig.Core.HttpRoamingOpts
   alias HeliumConfig.Core.GwmpOpts
   alias HeliumConfig.Core.PacketRouterOpts
+  alias HeliumConfig.Core.DevaddrRange
+  alias HeliumConfig.Core.Devaddr
   alias HeliumConfig.DB
+
+  import HeliumConfig.Fixtures
 
   describe "Route.from_web/1" do
     test "can decode an HTTP Roaming Route from JSON params" do
@@ -441,6 +445,32 @@ defmodule HeliumConfig.Core.RouteTest do
       }
 
       assert(got == expected)
+    end
+  end
+
+  describe "Route.member?/1" do
+    test "returns true given a route and a devaddr within the route's devaddr ranges" do
+      range = DevaddrRange.new(:devaddr_6x24, 42, 5, 15)
+
+      route =
+        valid_core_route()
+        |> Map.put(:devaddr_ranges, [range])
+
+      devaddr = Devaddr.new(:devaddr_6x24, 42, 7)
+
+      assert(true == Route.member?(route, devaddr))
+    end
+
+    test "returns false given a route and a devaddr outside the route's devaddr ranges" do
+      range = DevaddrRange.new(:devaddr_6x24, 42, 5, 15)
+
+      route =
+        valid_core_route()
+        |> Map.put(:devaddr_ranges, [range])
+
+      devaddr = Devaddr.new(:devaddr_6x24, 42, 16)
+
+      assert(false == Route.member?(route, devaddr))
     end
   end
 end

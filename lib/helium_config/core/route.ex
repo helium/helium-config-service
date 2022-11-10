@@ -3,6 +3,8 @@ defmodule HeliumConfig.Core.Route do
 
   defstruct [:id, :oui, :net_id, :server, max_copies: 1, euis: [], devaddr_ranges: []]
 
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.DevaddrRange
   alias HeliumConfig.Core.RouteServer
   alias HeliumConfig.DB
 
@@ -15,6 +17,10 @@ defmodule HeliumConfig.Core.Route do
     params = Map.put(params, :server, server)
 
     struct!(__MODULE__, params)
+  end
+
+  def member?(%__MODULE__{devaddr_ranges: ranges}, devaddr = %Devaddr{}) do
+    Enum.any?(ranges, &DevaddrRange.member?(&1, devaddr))
   end
 
   def from_db(%DB.Route{} = db_route) do
