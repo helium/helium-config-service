@@ -7,6 +7,32 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
   import HeliumConfig.Fixtures
 
   describe "OrganizationValidator.validate/1" do
+    test "returns an error when given a Route outside the Organization's devaddr_constraints" do
+      net_id = Core.NetID.new(:net_id_contributor, 11, 42)
+      constraint = Core.DevaddrRange.from_net_id(net_id)
+
+      bad_range = Core.DevaddrRange.new(:devaddr_13x13, 12, 10, 20)
+
+      bad_route =
+        valid_core_route()
+        |> Map.put(:devaddr_ranges, [bad_range])
+
+      org =
+        valid_core_organization()
+        |> Map.put(:devaddr_constraints, [constraint])
+        |> Map.put(:routes, [bad_route])
+
+      got = OrganizationValidator.validate(org)
+
+      assert({:errors, [routes: route_errors]} = got)
+
+      assert(
+        [
+          "start addr in {%HeliumConfig.Core.Devaddr{F801800A}, %HeliumConfig.Core.Devaddr{F8018014}} must have the same NwkID as %HeliumConfig.Core.NetID{000A80}"
+        ] == route_errors
+      )
+    end
+
     test "returns an error when given an OUI that is not an integer" do
       given =
         valid_core_organization()
@@ -92,13 +118,10 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
       expected =
         {:errors,
          [
-           {:routes,
-            {:errors,
-             [
-               devaddr_ranges:
-                 {:error,
-                  "start and end addr in {%HeliumConfig.Core.Devaddr{10000001}, %HeliumConfig.Core.Devaddr{0E0000FF}} must have the same NwkID"}
-             ]}}
+           routes: [
+             devaddr_ranges:
+               "start and end addr in {%HeliumConfig.Core.Devaddr{10000001}, %HeliumConfig.Core.Devaddr{0E0000FF}} must have the same NwkID"
+           ]
          ]}
 
       assert(expected == OrganizationValidator.validate(given))

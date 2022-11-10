@@ -1,6 +1,9 @@
 defmodule HeliumConfig.Core.OrganizationTest do
   use ExUnit.Case
 
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.DevaddrRange
+  alias HeliumConfig.Core.NetID
   alias HeliumConfig.Core.Organization
   alias HeliumConfig.Core.HttpRoamingOpts
   alias HeliumConfig.Core.RouteServer
@@ -9,6 +12,8 @@ defmodule HeliumConfig.Core.OrganizationTest do
   alias HeliumConfig.Core.Crypto
 
   alias Proto.Helium.Config, as: ConfigProto
+
+  import HeliumConfig.Fixtures
 
   describe "Organization.from_web/1" do
     test "returns a properly formed %Organization{} given properly formed json params" do
@@ -148,6 +153,78 @@ defmodule HeliumConfig.Core.OrganizationTest do
       }
 
       assert(expected == got)
+    end
+  end
+
+  describe "Organization.member?/1" do
+    test "returns true given a devaddr within the Organization's devaddr_constraints" do
+      range = DevaddrRange.new(:devaddr_6x24, 11, 5, 20)
+      devaddr = Devaddr.new(:devaddr_6x24, 11, 6)
+
+      org = %Organization{
+        devaddr_constraints: [range]
+      }
+
+      assert(true == Organization.member?(org, devaddr))
+    end
+
+    test "returns false given a devaddr outside the Organization's devaddr_constraints" do
+      range = DevaddrRange.new(:devaddr_6x24, 11, 5, 20)
+      devaddr1 = Devaddr.new(:devaddr_6x24, 11, 21)
+      devaddr2 = Devaddr.new(:devaddr_6x24, 11, 4)
+      devaddr3 = Devaddr.new(:devaddr_6x25, 11, 6)
+
+      org = %Organization{
+        devaddr_constraints: [range]
+      }
+
+      assert(false == Organization.member?(org, devaddr1))
+      assert(false == Organization.member?(org, devaddr2))
+      assert(false == Organization.member?(org, devaddr3))
+    end
+  end
+
+  describe "Organization.routes/2" do
+    test "returns the list of the given organization's routes that include the given devaddr" do
+      nwk_id = 42
+      nwk_id_2 = 88
+
+      range1 = DevaddrRange.new(:devaddr_13x13, nwk_id, 15, 20)
+      range2 = DevaddrRange.new(:devaddr_13x13, nwk_id, 50, 60)
+      range3 = DevaddrRange.new(:devaddr_6x25, nwk_id_2, 0, 1000)
+
+      devaddr = Devaddr.new(:devaddr_13x13, nwk_id, 16)
+
+      route1 =
+        valid_core_route()
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:devaddr_ranges, [range1])
+
+      route2 =
+        valid_core_route()
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:devaddr_ranges, [range2, range1])
+
+      route3 =
+        valid_core_route()
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:devaddr_ranges, [range2])
+
+      route4 =
+        valid_core_route()
+        |> Map.put(:net_id, NetID.new(:net_id_sponsor, 12, nwk_id_2))
+        |> Map.put(:devaddr_ranges, [range3])
+
+      org = %Organization{
+        routes: [route1, route2, route3, route4]
+      }
+
+      got = Organization.routes(org, devaddr)
+
+      assert(true == Enum.member?(got, route1))
+      assert(true == Enum.member?(got, route2))
+      assert(false == Enum.member?(got, route3))
+      assert(false == Enum.member?(got, route4))
     end
   end
 end

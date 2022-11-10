@@ -1,5 +1,5 @@
 defmodule HeliumConfig.Core.Organization do
-  defstruct [:oui, :owner_pubkey, :payer_pubkey, :routes]
+  defstruct [:oui, :owner_pubkey, :payer_pubkey, :routes, :devaddr_constraints]
 
   alias HeliumConfig.Core
   alias HeliumConfig.DB
@@ -14,6 +14,18 @@ defmodule HeliumConfig.Core.Organization do
     params = Map.put(params, :routes, routes)
 
     struct!(__MODULE__, params)
+  end
+
+  def member?(%__MODULE__{devaddr_constraints: constraints}, %Core.Devaddr{} = devaddr) do
+    Enum.any?(constraints, &Core.DevaddrRange.member?(&1, devaddr))
+  end
+
+  def routes(%__MODULE__{routes: routes}, %Core.Devaddr{} = devaddr) do
+    Enum.filter(routes, &Core.Route.member?(&1, devaddr))
+  end
+
+  def routes(%__MODULE__{} = o, devaddr) when is_binary(devaddr) do
+    routes(o, Core.Devaddr.from_str(devaddr))
   end
 
   def from_web(json_params) do
