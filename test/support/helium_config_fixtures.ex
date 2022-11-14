@@ -10,12 +10,7 @@ defmodule HeliumConfig.Fixtures do
   end
 
   def valid_devaddr(nwk_id, nwk_addr) do
-    <<int::integer-unsigned-size(32)>> =
-      :devaddr_6x25
-      |> Core.Devaddr.new(nwk_id, nwk_addr)
-      |> Core.Devaddr.to_binary()
-
-    int
+    Core.Devaddr.new(:devaddr_6x25, nwk_id, nwk_addr)
   end
 
   def valid_net_id(rfu, nwk_id) do

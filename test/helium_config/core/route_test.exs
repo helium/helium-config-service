@@ -9,6 +9,7 @@ defmodule HeliumConfig.Core.RouteTest do
   alias HeliumConfig.Core.PacketRouterOpts
   alias HeliumConfig.Core.DevaddrRange
   alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.NetID
   alias HeliumConfig.DB
 
   import HeliumConfig.Fixtures
@@ -33,8 +34,8 @@ defmodule HeliumConfig.Core.RouteTest do
           %{"app_eui" => 300, "dev_eui" => 400}
         ],
         "devaddr_ranges" => [
-          %{"start_addr" => "0000000000000001", "end_addr" => "00000000000000FF"},
-          %{"start_addr" => "0000000000000200", "end_addr" => "00000000000002FF"}
+          %{"start_addr" => "00000001", "end_addr" => "000000FF"},
+          %{"start_addr" => "00000200", "end_addr" => "000002FF"}
         ]
       }
 
@@ -57,8 +58,10 @@ defmodule HeliumConfig.Core.RouteTest do
           %{app_eui: 300, dev_eui: 400}
         ],
         devaddr_ranges: [
-          {1, 255},
-          {512, 767}
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}},
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 512},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 767}}
         ]
       }
 
@@ -116,11 +119,13 @@ defmodule HeliumConfig.Core.RouteTest do
     test "converts string arguments from hex to integer" do
       got =
         Route.devaddr_range_from_web(%{
-          "start_addr" => "0000000000000001",
-          "end_addr" => "00000000000000FF"
+          "start_addr" => "00000001",
+          "end_addr" => "000000FF"
         })
 
-      expected = {1, 255}
+      expected =
+        {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+         %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
 
       assert(got == expected)
     end
@@ -128,7 +133,9 @@ defmodule HeliumConfig.Core.RouteTest do
     test "accepts integer arguments as-is" do
       got = Route.devaddr_range_from_web(%{"start_addr" => 0x1, "end_addr" => 0xFF})
 
-      expected = {1, 255}
+      expected =
+        {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+         %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
 
       assert(got == expected)
     end
@@ -154,11 +161,18 @@ defmodule HeliumConfig.Core.RouteTest do
 
   describe "Route.from_db/1" do
     test "returns a correct Core.Route given a valid HTTP Roaming DB.Route" do
+      nwk_id = 42
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(11, nwk_id)
+        |> NetID.to_integer()
+
       given =
         %DB.Route{}
         |> DB.Route.changeset(%{
           oui: 1,
-          net_id: 0x123456,
+          net_id: net_id,
           max_copies: 2,
           server: %{
             host: "server1.testdomain.com",
@@ -171,14 +185,21 @@ defmodule HeliumConfig.Core.RouteTest do
               }
             }
           },
-          devaddr_ranges: [%{start_addr: 0x00000001, end_addr: 0x00000020}],
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x25,
+              nwk_id: nwk_id,
+              start_nwk_addr: 5,
+              end_nwk_addr: 50
+            }
+          ],
           euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
         })
         |> Ecto.Changeset.apply_changes()
 
       expected = %Route{
         oui: 1,
-        net_id: 0x123456,
+        net_id: net_id,
         max_copies: 2,
         server: %RouteServer{
           host: "server1.testdomain.com",
@@ -188,7 +209,12 @@ defmodule HeliumConfig.Core.RouteTest do
             auth_header: "x-auth-header"
           }
         },
-        devaddr_ranges: [{0x00000001, 0x00000020}],
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 5},
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 50}
+          }
+        ],
         euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
       }
 
@@ -198,11 +224,18 @@ defmodule HeliumConfig.Core.RouteTest do
     end
 
     test "returns a correct Core.Route given a valid GWMP DB.Route" do
+      nwk_id = 7
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(11, nwk_id)
+        |> NetID.to_integer()
+
       given =
         %DB.Route{}
         |> DB.Route.changeset(%{
           oui: 1,
-          net_id: 0x123456,
+          net_id: net_id,
           max_copies: 2,
           server: %{
             host: "server1.testdomain.com",
@@ -217,14 +250,21 @@ defmodule HeliumConfig.Core.RouteTest do
               }
             }
           },
-          devaddr_ranges: [%{start_addr: 0x00000001, end_addr: 0x00000020}],
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x25,
+              nwk_id: nwk_id,
+              start_nwk_addr: 15,
+              end_nwk_addr: 20
+            }
+          ],
           euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
         })
         |> Ecto.Changeset.apply_changes()
 
       expected = %Route{
         oui: 1,
-        net_id: 0x123456,
+        net_id: net_id,
         max_copies: 2,
         server: %RouteServer{
           host: "server1.testdomain.com",
@@ -236,7 +276,12 @@ defmodule HeliumConfig.Core.RouteTest do
             ]
           }
         },
-        devaddr_ranges: [{0x00000001, 0x00000020}],
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 15},
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 20}
+          }
+        ],
         euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
       }
 
@@ -246,11 +291,18 @@ defmodule HeliumConfig.Core.RouteTest do
     end
 
     test "returns a correct Core.Route given a valid Packet Route DB.Route" do
+      nwk_id = 42
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(11, nwk_id)
+        |> NetID.to_integer()
+
       given =
         %DB.Route{}
         |> DB.Route.changeset(%{
           oui: 1,
-          net_id: 0x123456,
+          net_id: net_id,
           max_copies: 2,
           server: %{
             host: "server1.testdomain.com",
@@ -260,21 +312,33 @@ defmodule HeliumConfig.Core.RouteTest do
               opts: %{}
             }
           },
-          devaddr_ranges: [%{start_addr: 0x00000001, end_addr: 0x00000020}],
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x24,
+              nwk_id: nwk_id,
+              start_nwk_addr: 45,
+              end_nwk_addr: 90
+            }
+          ],
           euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
         })
         |> Ecto.Changeset.apply_changes()
 
       expected = %Route{
         oui: 1,
-        net_id: 0x123456,
+        net_id: net_id,
         max_copies: 2,
         server: %RouteServer{
           host: "server1.testdomain.com",
           port: 5555,
           protocol_opts: %PacketRouterOpts{}
         },
-        devaddr_ranges: [{0x00000001, 0x00000020}],
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x24, nwk_id: nwk_id, nwk_addr: 45},
+            %Devaddr{type: :devaddr_6x24, nwk_id: nwk_id, nwk_addr: 90}
+          }
+        ],
         euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
       }
 
@@ -329,8 +393,10 @@ defmodule HeliumConfig.Core.RouteTest do
           %{app_eui: 300, dev_eui: 400}
         ],
         devaddr_ranges: [
-          {0x00000001, 0x000000FF},
-          {0x00000200, 0x000002FF}
+          {%Devaddr{nwk_addr: 1, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 255, nwk_id: 0, type: :devaddr_6x25}},
+          {%Devaddr{nwk_addr: 512, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 767, nwk_id: 0, type: :devaddr_6x25}}
         ]
       }
 
@@ -341,7 +407,7 @@ defmodule HeliumConfig.Core.RouteTest do
       bin =
         %{
           id: "",
-          net_id: 7,
+          net_id: 0,
           oui: 1,
           max_copies: 3,
           server: %{
@@ -370,7 +436,7 @@ defmodule HeliumConfig.Core.RouteTest do
       expected = %Route{
         id: "",
         oui: 1,
-        net_id: 7,
+        net_id: 0,
         max_copies: 3,
         server: %RouteServer{
           host: "server1.testdomain.com",
@@ -387,8 +453,10 @@ defmodule HeliumConfig.Core.RouteTest do
           %{app_eui: 300, dev_eui: 400}
         ],
         devaddr_ranges: [
-          {0x00000001, 0x000000FF},
-          {0x00000200, 0x000002FF}
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}},
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 512},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 767}}
         ]
       }
 
@@ -439,8 +507,10 @@ defmodule HeliumConfig.Core.RouteTest do
           %{app_eui: 300, dev_eui: 400}
         ],
         devaddr_ranges: [
-          {0x00000001, 0x000000FF},
-          {0x00000200, 0x000002FF}
+          {%Devaddr{nwk_addr: 1, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 255, nwk_id: 0, type: :devaddr_6x25}},
+          {%Devaddr{nwk_addr: 512, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 767, nwk_id: 0, type: :devaddr_6x25}}
         ]
       }
 

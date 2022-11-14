@@ -1,6 +1,7 @@
 defmodule HeliumConfigWeb.RouteView do
   use HeliumConfigWeb, :view
 
+  alias HeliumConfig.Core.Devaddr
   alias HeliumConfig.Core.Route
   alias HeliumConfig.Core.RouteServer
   alias HeliumConfig.Core.HttpRoamingOpts
@@ -99,7 +100,7 @@ defmodule HeliumConfigWeb.RouteView do
 
   def devaddr_to_hex_string(devaddr) do
     devaddr
-    |> Integer.to_string(16)
+    |> Devaddr.to_hex_str()
     |> String.pad_leading(@nybbles_in_a_devaddr, "0")
   end
 

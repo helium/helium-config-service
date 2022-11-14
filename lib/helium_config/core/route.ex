@@ -45,7 +45,17 @@ defmodule HeliumConfig.Core.Route do
   end
 
   def devaddr_ranges_from_db(ranges) do
-    Enum.map(ranges, fn %DB.DevaddrRange{start_addr: s, end_addr: e} -> {s, e} end)
+    ranges
+    |> Enum.map(fn %DB.DevaddrRange{
+                     type: type,
+                     nwk_id: nwk_id,
+                     start_nwk_addr: start_addr,
+                     end_nwk_addr: end_addr
+                   } ->
+      s = Devaddr.new(type, nwk_id, start_addr)
+      e = Devaddr.new(type, nwk_id, end_addr)
+      {s, e}
+    end)
   end
 
   def from_proto(%{__struct__: Proto.Helium.Config.RouteV1} = route) do
@@ -74,7 +84,7 @@ defmodule HeliumConfig.Core.Route do
   def devaddr_ranges_from_proto(devaddr_ranges) do
     devaddr_ranges
     |> Enum.map(fn %{__struct__: Proto.Helium.Config.DevaddrRangeV1, start_addr: s, end_addr: e} ->
-      {s, e}
+      {Devaddr.from_integer(s), Devaddr.from_integer(e)}
     end)
   end
 
@@ -143,11 +153,11 @@ defmodule HeliumConfig.Core.Route do
 
   def devaddr_range_from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
       when is_binary(start_addr) and is_binary(end_addr) do
-    {String.to_integer(start_addr, 16), String.to_integer(end_addr, 16)}
+    {Devaddr.from_str(start_addr), Devaddr.from_str(end_addr)}
   end
 
   def devaddr_range_from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
       when is_integer(start_addr) and is_integer(end_addr) do
-    {start_addr, end_addr}
+    {Devaddr.from_integer(start_addr), Devaddr.from_integer(end_addr)}
   end
 end

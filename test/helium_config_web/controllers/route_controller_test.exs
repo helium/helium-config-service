@@ -150,7 +150,9 @@ defmodule HeliumConfigWeb.RouteControllerTest do
       updated_route =
         existing_route
         |> Map.put(:net_id, 11)
-        |> Map.put(:devaddr_ranges, [{0xAAAA_0000, 0xAAAA_FFFF}])
+        |> Map.put(:devaddr_ranges, [
+          {Core.Devaddr.from_integer(0xAAAA_0000), Core.Devaddr.from_integer(0xAAAA_FFFF)}
+        ])
         |> Map.put(:euis, [%{app_eui: 5000, dev_eui: 6000}])
         |> Map.put(:server, %Core.RouteServer{
           host: "updated_host.testdomain.com",

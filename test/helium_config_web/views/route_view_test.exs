@@ -96,6 +96,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
   test "Devaddr strings are 8 hex characters wide" do
     got =
       0xFFFF
+      |> Core.Devaddr.from_integer()
       |> RouteView.devaddr_to_hex_string()
       |> String.length()
 

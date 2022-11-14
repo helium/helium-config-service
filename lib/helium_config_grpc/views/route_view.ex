@@ -3,6 +3,7 @@ defmodule HeliumConfigGRPC.RouteView do
   Provides functions to convert HeliumConfig.Core.Route structs to maps suitable for encoding protobuf messages.
   """
 
+  alias HeliumConfig.Core.Devaddr
   alias HeliumConfig.Core.GwmpOpts
   alias HeliumConfig.Core.PacketRouterOpts
   alias HeliumConfig.Core.HttpRoamingOpts
@@ -48,10 +49,10 @@ defmodule HeliumConfigGRPC.RouteView do
 
   def eui_pair_params(%{app_eui: _app, dev_eui: _dev} = pair), do: pair
 
-  def devaddr_range_params({s, e}) do
+  def devaddr_range_params({%Devaddr{} = s, %Devaddr{} = e}) do
     %{
-      start_addr: s,
-      end_addr: e
+      start_addr: Devaddr.to_integer(s),
+      end_addr: Devaddr.to_integer(e)
     }
   end
 end

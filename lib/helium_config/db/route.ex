@@ -49,6 +49,13 @@ defmodule HeliumConfig.DB.Route do
   end
 
   defp devaddr_range_params(ranges) do
-    Enum.map(ranges, fn {s, e} -> %{start_addr: s, end_addr: e} end)
+    Enum.map(ranges, fn {%Core.Devaddr{} = s, %Core.Devaddr{} = e} ->
+      %{
+        type: s.type,
+        nwk_id: s.nwk_id,
+        start_nwk_addr: s.nwk_addr,
+        end_nwk_addr: e.nwk_addr
+      }
+    end)
   end
 end

@@ -44,7 +44,7 @@ defmodule HeliumConfig.Core.OrganizationTest do
               %{"app_eui" => 100, "dev_eui" => 200}
             ],
             "devaddr_ranges" => [
-              %{"start_addr" => "0000000000000001", "end_addr" => "000000000000001F"}
+              %{"start_addr" => "00000001", "end_addr" => "0000001F"}
             ]
           },
           %{
@@ -65,7 +65,7 @@ defmodule HeliumConfig.Core.OrganizationTest do
               %{"app_eui" => 300, "dev_eui" => 400}
             ],
             "devaddr_ranges" => [
-              %{"start_addr" => "0000000000000020", "end_addr" => "000000000000002F"}
+              %{"start_addr" => "00000020", "end_addr" => "0000002F"}
             ]
           }
         ]
@@ -93,7 +93,8 @@ defmodule HeliumConfig.Core.OrganizationTest do
               %{app_eui: 100, dev_eui: 200}
             ],
             devaddr_ranges: [
-              {0x1, 0x1F}
+              {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 0x1},
+               %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 0x1F}}
             ]
           },
           %Route{
@@ -113,7 +114,8 @@ defmodule HeliumConfig.Core.OrganizationTest do
               %{app_eui: 300, dev_eui: 400}
             ],
             devaddr_ranges: [
-              {0x20, 0x2F}
+              {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 0x20},
+               %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 0x2F}}
             ]
           }
         ]

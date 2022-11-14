@@ -57,7 +57,8 @@ defmodule HeliumConfig.DBTest do
           }
         },
         devaddr_ranges: [
-          {0x1000_0000, 0x1000_FFFF}
+          {%Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
         ],
         euis: [
           %{
@@ -88,7 +89,8 @@ defmodule HeliumConfig.DBTest do
           }
         },
         devaddr_ranges: [
-          {0x1000_0000, 0x1000_FFFF}
+          {%Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
         ],
         euis: [
           %{
@@ -126,7 +128,8 @@ defmodule HeliumConfig.DBTest do
           }
         },
         devaddr_ranges: [
-          {0x1000_0000, 0x1000_FFFF}
+          {%Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
         ],
         euis: [
           %{
@@ -162,7 +165,8 @@ defmodule HeliumConfig.DBTest do
           }
         },
         devaddr_ranges: [
-          {0x1000_0000, 0x1000_FFFF}
+          {%Core.Devaddr{nwk_addr: 0, nwk_id: 8, type: :devaddr_6x25},
+           %Core.Devaddr{nwk_addr: 65535, nwk_id: 8, type: :devaddr_6x25}}
         ],
         euis: [
           %{
@@ -198,7 +202,8 @@ defmodule HeliumConfig.DBTest do
           }
         },
         devaddr_ranges: [
-          {0x1000_0000, 0x1000_FFFF}
+          {%Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Core.Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
         ],
         euis: [
           %{
