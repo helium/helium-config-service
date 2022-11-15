@@ -11,9 +11,22 @@ defmodule HeliumConfig.Core.Organization do
       |> Map.get(:routes, [])
       |> Enum.map(&Core.Route.new/1)
 
-    params = Map.put(params, :routes, routes)
+    constraints =
+      params
+      |> Map.get(:devaddr_constraints, [])
+      |> Enum.map(&maybe_new_devaddr_range/1)
+
+    params =
+      params
+      |> Map.put(:routes, routes)
+      |> Map.put(:devaddr_constraints, constraints)
 
     struct!(__MODULE__, params)
+  end
+
+  def new_roamer(owner_pubkey, payer_pubkey, net_id) do
+    constraints = [Core.DevaddrRange.from_net_id(net_id)]
+    new(%{owner_pubkey: owner_pubkey, payer_pubkey: payer_pubkey, devaddr_constraints: constraints})
   end
 
   def member?(%__MODULE__{devaddr_constraints: constraints}, %Core.Devaddr{} = devaddr) do
@@ -33,10 +46,20 @@ defmodule HeliumConfig.Core.Organization do
       json_params,
       %__MODULE__{},
       fn
-        {"oui", oui}, acc -> Map.put(acc, :oui, oui_from_web(oui))
-        {"owner_pubkey", id}, acc -> Map.put(acc, :owner_pubkey, pubkey_from_web(id))
-        {"payer_pubkey", id}, acc -> Map.put(acc, :payer_pubkey, pubkey_from_web(id))
-        {"routes", routes}, acc -> Map.put(acc, :routes, Enum.map(routes, &Core.Route.from_web/1))
+        {"oui", oui}, acc ->
+          Map.put(acc, :oui, oui_from_web(oui))
+
+        {"owner_pubkey", id}, acc ->
+          Map.put(acc, :owner_pubkey, pubkey_from_web(id))
+
+        {"payer_pubkey", id}, acc ->
+          Map.put(acc, :payer_pubkey, pubkey_from_web(id))
+
+        {"routes", routes}, acc ->
+          Map.put(acc, :routes, Enum.map(routes, &Core.Route.from_web/1))
+
+        {"devaddr_constraints", constraints}, acc ->
+          Map.put(acc, :devaddr_constraints, Enum.map(constraints, &Core.DevaddrRange.from_web/1))
       end
     )
   end
@@ -73,4 +96,8 @@ defmodule HeliumConfig.Core.Organization do
   defp pubkey_bin_from_proto(proto_id) do
     HeliumConfig.Core.Crypto.bin_to_pubkey(proto_id)
   end
+
+  defp maybe_new_devaddr_range({%Core.Devaddr{}, %Core.Devaddr{}} = range), do: range
+  
+  defp maybe_new_devaddr_range(%{} = params), do: Core.DevaddrRange.new(params)
 end

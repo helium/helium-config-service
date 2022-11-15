@@ -28,6 +28,23 @@ defmodule HeliumConfigGRPC.OrgServer do
     end
   end
 
+  def create_roamer(%{__struct__: ConfigProto.Org.CreateRoamerReqV1} = req, _stream) do
+    org =
+      req.owner
+      |> Core.Organization.new_roamer(req.payer, Core.NetID.from_integer(req.net_id))
+      |> Core.OrganizationValidator.validate!()
+      |> HeliumConfig.create_organization()
+      |> OrganizationView.organization_params()
+      |> ConfigProto.OrgV1.new()
+
+
+    ConfigProto.OrgResV1.new(%{
+	  org: org,
+	  net_id: req.net_id,
+	  devaddr_ranges: []
+			     })
+  end
+
   def get(%{__struct__: ConfigProto.OrgGetReqV1} = req, _stream) do
     req.oui
     |> HeliumConfig.get_organization()

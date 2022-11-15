@@ -2,9 +2,27 @@ defmodule HeliumConfig.Core.DevaddrRange do
   alias HeliumConfig.Core.Devaddr
   alias HeliumConfig.Core.NetID
 
+  def new(%{type: type, nwk_id: nwk_id, start_nwk_addr: s, end_nwk_addr: e}) do
+    new(type, nwk_id, s, e)
+  end
+
   def new(type, nwk_id, start_addr, end_addr) do
     s = Devaddr.new(type, nwk_id, start_addr)
     e = Devaddr.new(type, nwk_id, end_addr)
+    {s, e}
+  end
+
+  def from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
+      when is_integer(start_addr) and is_integer(end_addr) do
+    s = Devaddr.from_integer(start_addr)
+    e = Devaddr.from_integer(end_addr)
+    {s, e}
+  end
+
+  def from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
+      when is_binary(start_addr) and is_binary(end_addr) do
+    s = Devaddr.from_str(start_addr)
+    e = Devaddr.from_str(end_addr)
     {s, e}
   end
 

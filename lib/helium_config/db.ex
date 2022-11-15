@@ -71,7 +71,7 @@ defmodule HeliumConfig.DB do
     result =
       %DB.Organization{}
       |> DB.Organization.changeset(core_org)
-      |> Repo.insert!()
+      |> Repo.insert!(returning: true)
 
     result
   end

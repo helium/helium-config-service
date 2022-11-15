@@ -15,14 +15,15 @@ defmodule HeliumConfig.DB.RouteTest do
 
     org = Organization.changeset(%Organization{}, org_params)
 
-    Repo.insert!(org)
+    db_org = Repo.insert!(org, returning: true)
 
-    ctx
+    Map.put(ctx, :db_org, db_org)
   end
 
   describe "Route.changeset/2" do
-    test "returns a valid changeset given a valid HTTP Roaming Core.Route" do
-      roaming_route = valid_http_roaming_route()
+    test "returns a valid changeset given a valid HTTP Roaming Core.Route", %{db_org: org} do
+      IO.inspect(Repo.all(Organization), label: "ORGS")
+      roaming_route = valid_http_roaming_route(org.oui)
       got = Route.changeset(%Route{}, roaming_route)
 
       assert(true == got.valid?)

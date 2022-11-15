@@ -61,6 +61,13 @@ defmodule HeliumConfig do
     |> Core.Organization.from_db()
   end
 
+  def create_roamer_organization(buyer_pubkey, payer_pubkey, net_id) do
+    buyer_pubkey
+    |> Core.Organization.new_roamer(payer_pubkey, net_id)
+    |> DB.create_organization!()
+    |> Core.Organization.from_db()
+  end
+
   def update_organization(%Core.Organization{} = org) do
     org
     |> DB.update_organization!()

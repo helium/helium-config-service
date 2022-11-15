@@ -46,9 +46,11 @@ defmodule HeliumConfig.Fixtures do
     |> Map.put(:payer_pubkey, payer_pubkey)
   end
 
-  def valid_core_route do
+  def valid_core_route(), do: valid_core_route(nil)
+  
+  def valid_core_route(oui) do
     %Core.Route{
-      id: nil,
+      id: oui,
       oui: 1,
       net_id: valid_net_id(42, 0),
       max_copies: 2,
@@ -71,8 +73,8 @@ defmodule HeliumConfig.Fixtures do
     }
   end
 
-  def valid_http_roaming_route do
-    valid_core_route()
+  def valid_http_roaming_route(oui \\ nil) do
+    valid_core_route(oui)
     |> Map.put(:id, "11111111-2222-3333-4444-555555555555")
     |> Map.put(:server, %Core.RouteServer{
       host: "server1.testdomain.com",
@@ -85,8 +87,8 @@ defmodule HeliumConfig.Fixtures do
     })
   end
 
-  def valid_gwmp_route do
-    valid_core_route()
+  def valid_gwmp_route(oui \\ nil) do
+    valid_core_route(oui)
     |> Map.put(:id, "22222222-2222-3333-4444-555555555555")
     |> Map.put(:server, %Core.RouteServer{
       host: "server1.testdomain.com",
@@ -112,8 +114,8 @@ defmodule HeliumConfig.Fixtures do
     })
   end
 
-  def valid_packet_router_route do
-    valid_core_route()
+  def valid_packet_router_route(oui \\ nil) do
+    valid_core_route(oui)
     |> Map.put(:id, "33333333-2222-3333-4444-555555555555")
     |> Map.put(:server, %Core.RouteServer{
       host: "server1.testdomain.com",
