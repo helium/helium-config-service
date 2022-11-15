@@ -25,8 +25,9 @@ defmodule HeliumConfig.Core.RouteTest do
           "port" => 1000,
           "protocol" => %{
             "type" => "http_roaming",
-            "dedupe_window" => 1200,
-            "auth_header" => "x-helium-auth"
+            "dedupe_timeout" => 1200,
+            "flow_type" => "async",
+            "path" => "/helium"
           }
         },
         "euis" => [
@@ -49,8 +50,9 @@ defmodule HeliumConfig.Core.RouteTest do
           host: "server1.testdomain.com",
           port: 1000,
           protocol_opts: %HttpRoamingOpts{
-            dedupe_window: 1200,
-            auth_header: "x-helium-auth"
+            dedupe_timeout: 1200,
+            flow_type: :async,
+            path: "/helium"
           }
         },
         euis: [
@@ -180,8 +182,9 @@ defmodule HeliumConfig.Core.RouteTest do
             protocol_opts: %{
               type: :http_roaming,
               opts: %{
-                "dedupe_window" => 1800,
-                "auth_header" => "x-auth-header"
+                "dedupe_timeout" => 1800,
+                "flow_type" => "sync",
+                "path" => "/helium"
               }
             }
           },
@@ -205,8 +208,9 @@ defmodule HeliumConfig.Core.RouteTest do
           host: "server1.testdomain.com",
           port: 5555,
           protocol_opts: %HttpRoamingOpts{
-            dedupe_window: 1800,
-            auth_header: "x-auth-header"
+            dedupe_timeout: 1800,
+            flow_type: :sync,
+            path: "/helium"
           }
         },
         devaddr_ranges: [
@@ -359,7 +363,7 @@ defmodule HeliumConfig.Core.RouteTest do
           server: %{
             host: "server1.testdomain.com",
             port: 1000,
-            protocol: {:http_roaming, %{dummy_arg: true}}
+            protocol: {:http_roaming, %{dedupe_timeout: 1200, flow_type: :sync, path: "/helium"}}
           },
           euis: [
             %{app_eui: 100, dev_eui: 200},
@@ -386,7 +390,11 @@ defmodule HeliumConfig.Core.RouteTest do
         server: %RouteServer{
           host: "server1.testdomain.com",
           port: 1000,
-          protocol_opts: %HttpRoamingOpts{}
+          protocol_opts: %HttpRoamingOpts{
+            dedupe_timeout: 1200,
+            flow_type: :sync,
+            path: "/helium"
+          }
         },
         euis: [
           %{app_eui: 100, dev_eui: 200},

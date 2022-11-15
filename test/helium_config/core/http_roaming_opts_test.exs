@@ -6,7 +6,11 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
 
   test "can decode from a protobuf" do
     bin =
-      %{}
+      %{
+        dedupe_timeout: 1200,
+        flow_type: :async,
+        path: "/helium/auth"
+      }
       |> ProtocolHttpRoamingV1.new()
       |> ProtocolHttpRoamingV1.encode()
 
@@ -15,7 +19,11 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
       |> ProtocolHttpRoamingV1.decode()
       |> HttpRoamingOpts.from_proto()
 
-    expected = %HttpRoamingOpts{}
+    expected = %HttpRoamingOpts{
+      dedupe_timeout: 1200,
+      flow_type: :async,
+      path: "/helium/auth"
+    }
 
     assert(got == expected)
   end
@@ -24,15 +32,17 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
     test "returns a properly formed %HttpRoamingOpts{} given properly formed JSON params" do
       protocol_opts = %{
         "type" => "http_roaming",
-        "dedupe_window" => 1200,
-        "auth_header" => "x-helium-auth"
+        "dedupe_timeout" => 1200,
+        "flow_type" => "async",
+        "path" => "/helium"
       }
 
       got = HttpRoamingOpts.from_web(protocol_opts)
 
       expected = %HttpRoamingOpts{
-        dedupe_window: 1200,
-        auth_header: "x-helium-auth"
+        dedupe_timeout: 1200,
+        flow_type: :async,
+        path: "/helium"
       }
 
       assert(got == expected)

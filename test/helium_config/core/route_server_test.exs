@@ -13,7 +13,7 @@ defmodule HeliumConfig.Core.RouteServerTest do
         %{
           host: "server1.testdomain.com",
           port: 9999,
-          protocol: {:http_roaming, %{dummy_arg: true}}
+          protocol: {:http_roaming, %{dedupe_timeout: 1200, flow_type: :sync, path: "/helium"}}
         }
         |> ServerV1.new()
         |> ServerV1.encode()
@@ -26,7 +26,11 @@ defmodule HeliumConfig.Core.RouteServerTest do
       expected = %RouteServer{
         host: "server1.testdomain.com",
         port: 9999,
-        protocol_opts: %HttpRoamingOpts{}
+        protocol_opts: %HttpRoamingOpts{
+          dedupe_timeout: 1200,
+          flow_type: :sync,
+          path: "/helium"
+        }
       }
 
       assert(got == expected)

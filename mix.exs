@@ -77,7 +77,7 @@ defmodule HeliumConfig.MixProject do
       {:grpc, "~> 0.5.0"},
       {:helium_proto,
        git: "https://github.com/helium/proto.git",
-       branch: "macpie/config_service_grpc",
+       branch: "macpie/org_create",
        compile: router_config_proto_compile(),
        app: false},
       {:libp2p_crypto, git: "https://github.com/helium/libp2p-crypto.git"}

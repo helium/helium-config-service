@@ -28,8 +28,9 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
           port: 8888,
           protocol: %{
             type: "http_roaming",
-            dedupe_window: 1200,
-            auth_header: "x-helium-auth"
+            dedupe_timeout: 1200,
+            flow_type: "async",
+            path: "/helium"
           }
         },
         euis: [
@@ -63,8 +64,9 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
         port: 8888,
         protocol: %{
           type: "http_roaming",
-          dedupe_window: 1200,
-          auth_header: "x-helium-auth"
+          dedupe_timeout: 1200,
+          flow_type: "async",
+          path: "/helium"
         }
       },
       euis: [
@@ -119,16 +121,18 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
   describe "RouteView.protocol_json/1" do
     test "renders HttpRoamingOpts correctly" do
       opts = %Core.HttpRoamingOpts{
-        dedupe_window: 1200,
-        auth_header: "x-helium-auth"
+        dedupe_timeout: 1200,
+        flow_type: :sync,
+        path: "/path"
       }
 
       got = RouteView.protocol_json(opts)
 
       expected = %{
         type: "http_roaming",
-        dedupe_window: 1200,
-        auth_header: "x-helium-auth"
+        dedupe_timeout: 1200,
+        flow_type: "sync",
+        path: "/path"
       }
 
       assert(got == expected)

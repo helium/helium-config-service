@@ -56,8 +56,9 @@ defmodule HeliumConfig.Fixtures do
         host: "server1.testdomain.com",
         port: 8888,
         protocol_opts: %Core.HttpRoamingOpts{
-          dedupe_window: 1200,
-          auth_header: "x-helium-auth"
+          dedupe_timeout: 1200,
+          flow_type: :sync,
+          path: "/helium"
         }
       },
       euis: [
@@ -77,8 +78,9 @@ defmodule HeliumConfig.Fixtures do
       host: "server1.testdomain.com",
       port: 8888,
       protocol_opts: %Core.HttpRoamingOpts{
-        dedupe_window: 1200,
-        auth_header: "x-helium-auth"
+        dedupe_timeout: 1200,
+        flow_type: :async,
+        path: "/helium"
       }
     })
   end

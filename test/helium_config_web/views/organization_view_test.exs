@@ -40,9 +40,10 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
               host: "server1.testdomain.com",
               port: 8888,
               protocol: %{
-                auth_header: "x-helium-auth",
-                dedupe_window: 1200,
-                type: "http_roaming"
+                type: "http_roaming",
+                dedupe_timeout: 1200,
+                flow_type: "async",
+                path: "/helium"
               }
             }
           },

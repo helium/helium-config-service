@@ -21,6 +21,7 @@ defmodule HeliumConfigGRPC.OrgServerTest do
     end
   end
 
+  @tag :skip
   describe "create" do
     test "returns an OrgV1 given a valid OrgCreateReqV1" do
       assert(0 == length(Repo.all(DB.Organization)))
