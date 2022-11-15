@@ -24,10 +24,10 @@ defmodule HeliumConfigTest do
       got_minus_oui = Map.put(got, :oui, nil)
 
       expected = %Core.Organization{
-	oui: nil,
-	owner_pubkey: owner.public,
-	payer_pubkey: payer.public,
-	routes: []
+        oui: nil,
+        owner_pubkey: owner.public,
+        payer_pubkey: payer.public,
+        routes: []
       }
 
       assert(expected == got_minus_oui)

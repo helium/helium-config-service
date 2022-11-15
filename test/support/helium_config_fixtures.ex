@@ -47,7 +47,7 @@ defmodule HeliumConfig.Fixtures do
   end
 
   def valid_core_route(), do: valid_core_route(nil)
-  
+
   def valid_core_route(oui) do
     %Core.Route{
       id: oui,

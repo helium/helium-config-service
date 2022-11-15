@@ -26,7 +26,12 @@ defmodule HeliumConfig.Core.Organization do
 
   def new_roamer(owner_pubkey, payer_pubkey, net_id) do
     constraints = [Core.DevaddrRange.from_net_id(net_id)]
-    new(%{owner_pubkey: owner_pubkey, payer_pubkey: payer_pubkey, devaddr_constraints: constraints})
+
+    new(%{
+      owner_pubkey: owner_pubkey,
+      payer_pubkey: payer_pubkey,
+      devaddr_constraints: constraints
+    })
   end
 
   def member?(%__MODULE__{devaddr_constraints: constraints}, %Core.Devaddr{} = devaddr) do
@@ -98,6 +103,6 @@ defmodule HeliumConfig.Core.Organization do
   end
 
   defp maybe_new_devaddr_range({%Core.Devaddr{}, %Core.Devaddr{}} = range), do: range
-  
+
   defp maybe_new_devaddr_range(%{} = params), do: Core.DevaddrRange.new(params)
 end

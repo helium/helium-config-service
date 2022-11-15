@@ -239,16 +239,16 @@ defmodule HeliumConfig.Core.OrganizationTest do
       %{public: payer_key} = Crypto.generate_key_pair()
 
       expected = %Organization{
-	oui: nil,
-	owner_pubkey: owner_key,
-	payer_pubkey: payer_key,
-	devaddr_constraints: [
-	  {
-	    %Devaddr{type: :devaddr_6x25, nwk_id: 42, nwk_addr: 0},
-	    %Devaddr{type: :devaddr_6x25, nwk_id: 42, nwk_addr: 0x1FFFFFF}
-	  }
-	],
-	routes: []
+        oui: nil,
+        owner_pubkey: owner_key,
+        payer_pubkey: payer_key,
+        devaddr_constraints: [
+          {
+            %Devaddr{type: :devaddr_6x25, nwk_id: 42, nwk_addr: 0},
+            %Devaddr{type: :devaddr_6x25, nwk_id: 42, nwk_addr: 0x1FFFFFF}
+          }
+        ],
+        routes: []
       }
 
       got = Organization.new_roamer(owner_key, payer_key, net_id)

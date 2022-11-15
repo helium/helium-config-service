@@ -17,7 +17,7 @@
   "gettext": {:hex, :gettext, "0.20.0", "75ad71de05f2ef56991dbae224d35c68b098dd0e26918def5bb45591d5c8d429", [:mix], [], "hexpm", "1c03b177435e93a47441d7f681a7040bd2a816ece9e2666d1c9001035121eb3d"},
   "grpc": {:hex, :grpc, "0.5.0", "a44cb306625a52fa31a2189ce91b40d24e82569568f0cc214c1e1e0faf54f58a", [:mix], [{:cowboy, "~> 2.9", [hex: :cowboy, repo: "hexpm", optional: false]}, {:cowlib, "~> 2.11", [hex: :cowlib, repo: "hexpm", optional: false]}, {:gun, "~> 2.0.1", [hex: :grpc_gun, repo: "hexpm", optional: false]}], "hexpm", "17b98593fdb1a65be7b2722821266627b3f2fba29bbbd7d0945389427c0d0d5f"},
   "gun": {:hex, :grpc_gun, "2.0.1", "221b792df3a93e8fead96f697cbaf920120deacced85c6cd3329d2e67f0871f8", [:rebar3], [{:cowlib, "~> 2.11", [hex: :cowlib, repo: "hexpm", optional: false]}], "hexpm", "795a65eb9d0ba16697e6b0e1886009ce024799e43bb42753f0c59b029f592831"},
-  "helium_proto": {:git, "https://github.com/helium/proto.git", "110f19afd3c88b4bf6f2b501838cf09fdbea2bef", [branch: "macpie/org_create"]},
+  "helium_proto": {:git, "https://github.com/helium/proto.git", "b60f03f7652da1cdc8c8e54f22211ba46628583c", [branch: "master"]},
   "jason": {:hex, :jason, "1.4.0", "e855647bc964a44e2f67df589ccf49105ae039d4179db7f6271dfd3843dc27e6", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "79a3791085b2a0f743ca04cec0f7be26443738779d09302e01318f97bdb82121"},
   "libp2p_crypto": {:git, "https://github.com/helium/libp2p-crypto.git", "a969bb7affc7d3fa1472aef80d736c467d3f6d45", []},
   "mime": {:hex, :mime, "2.0.3", "3676436d3d1f7b81b5a2d2bd8405f412c677558c81b1c92be58c00562bb59095", [:mix], [], "hexpm", "27a30bf0db44d25eecba73755acf4068cbfe26a4372f9eb3e4ea3a45956bff6b"},

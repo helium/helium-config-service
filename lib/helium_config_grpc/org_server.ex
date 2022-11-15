@@ -37,12 +37,11 @@ defmodule HeliumConfigGRPC.OrgServer do
       |> OrganizationView.organization_params()
       |> ConfigProto.OrgV1.new()
 
-
     ConfigProto.OrgResV1.new(%{
-	  org: org,
-	  net_id: req.net_id,
-	  devaddr_ranges: []
-			     })
+      org: org,
+      net_id: req.net_id,
+      devaddr_ranges: []
+    })
   end
 
   def get(%{__struct__: ConfigProto.OrgGetReqV1} = req, _stream) do
