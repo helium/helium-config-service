@@ -36,7 +36,7 @@ defmodule HeliumConfig.Core.OrganizationTest do
               "port" => 8080,
               "protocol" => %{
                 "type" => "http_roaming",
-                "dedupe_timeout" => 1200,
+                "dedupe_window" => 1200,
                 "flow_type" => "sync",
                 "path" => "/auth/path"
               }
@@ -86,7 +86,7 @@ defmodule HeliumConfig.Core.OrganizationTest do
               host: "server1.testdomain.com",
               port: 8080,
               protocol_opts: %HttpRoamingOpts{
-                dedupe_timeout: 1200,
+                dedupe_window: 1200,
                 flow_type: :sync,
                 path: "/auth/path"
               }

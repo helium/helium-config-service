@@ -60,7 +60,7 @@ defmodule HeliumConfigWeb.RouteView do
   def protocol_json(%HttpRoamingOpts{} = opts) do
     %{
       type: "http_roaming",
-      dedupe_timeout: opts.dedupe_timeout,
+      dedupe_window: opts.dedupe_window,
       flow_type: Atom.to_string(opts.flow_type),
       path: opts.path
     }

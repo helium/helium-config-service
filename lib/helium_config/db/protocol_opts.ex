@@ -14,7 +14,7 @@ defmodule HeliumConfig.DB.ProtocolOpts do
     fields = %{
       type: :http_roaming,
       opts: %{
-        "dedupe_timeout" => opts.dedupe_timeout,
+        "dedupe_window" => opts.dedupe_window,
         "flow_type" => Atom.to_string(opts.flow_type),
         "path" => opts.path
       }

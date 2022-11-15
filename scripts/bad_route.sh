@@ -24,7 +24,7 @@ curl -v -X POST http://localhost:4000/api/v1/routes \
     "port": 4567,
     "protocol": {
       "auth_header": "x-helium-auth",
-      "dedupe_timeout": 1200,
+      "dedupe_window": 1200,
       "type": "http_roaming"
     }
   }

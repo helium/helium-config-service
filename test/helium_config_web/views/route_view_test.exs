@@ -28,7 +28,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
           port: 8888,
           protocol: %{
             type: "http_roaming",
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: "async",
             path: "/helium"
           }
@@ -64,7 +64,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
         port: 8888,
         protocol: %{
           type: "http_roaming",
-          dedupe_timeout: 1200,
+          dedupe_window: 1200,
           flow_type: "async",
           path: "/helium"
         }
@@ -121,7 +121,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
   describe "RouteView.protocol_json/1" do
     test "renders HttpRoamingOpts correctly" do
       opts = %Core.HttpRoamingOpts{
-        dedupe_timeout: 1200,
+        dedupe_window: 1200,
         flow_type: :sync,
         path: "/path"
       }
@@ -130,7 +130,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
 
       expected = %{
         type: "http_roaming",
-        dedupe_timeout: 1200,
+        dedupe_window: 1200,
         flow_type: "sync",
         path: "/path"
       }

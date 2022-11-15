@@ -41,7 +41,7 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
               port: 8888,
               protocol: %{
                 type: "http_roaming",
-                dedupe_timeout: 1200,
+                dedupe_window: 1200,
                 flow_type: "async",
                 path: "/helium"
               }

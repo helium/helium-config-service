@@ -27,7 +27,7 @@ defmodule HeliumConfig.Core.RouteServerTest do
         host: "server1.testdomain.com",
         port: 9999,
         protocol_opts: %HttpRoamingOpts{
-          dedupe_timeout: 1200,
+          dedupe_window: 1200,
           flow_type: :sync,
           path: "/helium"
         }

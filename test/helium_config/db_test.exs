@@ -52,7 +52,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :async,
             path: "/helium"
           }
@@ -85,7 +85,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :sync,
             path: "/helium"
           }
@@ -125,7 +125,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :async,
             path: "/helium"
           }
@@ -163,7 +163,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :async,
             path: "/helium"
           }
@@ -201,7 +201,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :async,
             path: "/helium"
           }
@@ -237,7 +237,7 @@ defmodule HeliumConfig.DBTest do
           host: "newserver.testdomain.com",
           port: 4567,
           protocol_opts: %Core.HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :sync,
             path: "/helium"
           }

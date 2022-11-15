@@ -34,7 +34,7 @@ curl -v \
           "port": 8888,
           "protocol": {
             "auth_header": "x-helium-auth-foo",
-            "dedupe_timeout": 1200,
+            "dedupe_window": 1200,
             "type": "http_roaming"
           }
         }

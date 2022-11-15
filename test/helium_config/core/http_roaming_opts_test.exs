@@ -20,7 +20,7 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
       |> HttpRoamingOpts.from_proto()
 
     expected = %HttpRoamingOpts{
-      dedupe_timeout: 1200,
+      dedupe_window: 1200,
       flow_type: :async,
       path: "/helium/auth"
     }
@@ -32,7 +32,7 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
     test "returns a properly formed %HttpRoamingOpts{} given properly formed JSON params" do
       protocol_opts = %{
         "type" => "http_roaming",
-        "dedupe_timeout" => 1200,
+        "dedupe_window" => 1200,
         "flow_type" => "async",
         "path" => "/helium"
       }
@@ -40,7 +40,7 @@ defmodule HeliumConfig.Core.HttpRoamingOptsTest do
       got = HttpRoamingOpts.from_web(protocol_opts)
 
       expected = %HttpRoamingOpts{
-        dedupe_timeout: 1200,
+        dedupe_window: 1200,
         flow_type: :async,
         path: "/helium"
       }

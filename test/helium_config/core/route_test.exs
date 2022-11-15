@@ -25,7 +25,7 @@ defmodule HeliumConfig.Core.RouteTest do
           "port" => 1000,
           "protocol" => %{
             "type" => "http_roaming",
-            "dedupe_timeout" => 1200,
+            "dedupe_window" => 1200,
             "flow_type" => "async",
             "path" => "/helium"
           }
@@ -50,7 +50,7 @@ defmodule HeliumConfig.Core.RouteTest do
           host: "server1.testdomain.com",
           port: 1000,
           protocol_opts: %HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :async,
             path: "/helium"
           }
@@ -182,7 +182,7 @@ defmodule HeliumConfig.Core.RouteTest do
             protocol_opts: %{
               type: :http_roaming,
               opts: %{
-                "dedupe_timeout" => 1800,
+                "dedupe_window" => 1800,
                 "flow_type" => "sync",
                 "path" => "/helium"
               }
@@ -208,7 +208,7 @@ defmodule HeliumConfig.Core.RouteTest do
           host: "server1.testdomain.com",
           port: 5555,
           protocol_opts: %HttpRoamingOpts{
-            dedupe_timeout: 1800,
+            dedupe_window: 1800,
             flow_type: :sync,
             path: "/helium"
           }
@@ -391,7 +391,7 @@ defmodule HeliumConfig.Core.RouteTest do
           host: "server1.testdomain.com",
           port: 1000,
           protocol_opts: %HttpRoamingOpts{
-            dedupe_timeout: 1200,
+            dedupe_window: 1200,
             flow_type: :sync,
             path: "/helium"
           }
