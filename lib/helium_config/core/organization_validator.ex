@@ -28,11 +28,12 @@ defmodule HeliumConfig.Core.OrganizationValidator do
     end
   end
 
-  def validate_oui(oui) do
-    with :ok <-
-           check(is_integer(oui) and oui > 0, {:error, "oui must be a positive unsigned integer"}) do
+  def validate_oui(_oui) do
+    # TODO: check with the database for the next available OUI to be assigned
+    # with :ok <-
+           # check(is_integer(oui) and oui > 0, {:error, "oui must be a positive unsigned integer"}) do
       :ok
-    end
+    # end
   end
 
   def validate_pubkey({:ecc_compact, _}), do: :ok

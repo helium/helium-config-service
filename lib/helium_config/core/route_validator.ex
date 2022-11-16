@@ -11,6 +11,7 @@ defmodule HeliumConfig.Core.RouteValidator do
     case validate(fields) do
       :ok -> fields
       {:errors, errors} -> raise InvalidDataError, message: "#{inspect(errors)}"
+      errors when is_list(errors) -> raise InvalidDataError, message: "#{inspect(errors)}"
     end
   end
 

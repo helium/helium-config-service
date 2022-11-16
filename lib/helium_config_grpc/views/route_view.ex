@@ -30,7 +30,18 @@ defmodule HeliumConfigGRPC.RouteView do
     }
   end
 
-  def protocol_params(%HttpRoamingOpts{}), do: {:http_roaming, %{dummy_value: true}}
+  def protocol_params(%HttpRoamingOpts{
+        dedupe_window: dedupe_window,
+        flow_type: flow_type,
+        path: path
+      }) do
+    {:http_roaming,
+     %{
+       dedupe_timeout: dedupe_window,
+       flow_type: flow_type,
+       path: path
+     }}
+  end
 
   def protocol_params(%GwmpOpts{mapping: mapping}) do
     {:gwmp,
