@@ -3,10 +3,7 @@ defmodule HeliumConfigGRPC.OrgServerTest do
 
   import HeliumConfig.Fixtures
 
-  alias HeliumConfig.DB
-  alias HeliumConfig.Repo
   alias Proto.Helium.Config, as: ConfigProto
-  alias HeliumConfigGRPC.OrganizationView
 
   describe "list" do
     setup [:create_default_org]
@@ -18,28 +15,6 @@ defmodule HeliumConfigGRPC.OrgServerTest do
 
       assert({:ok, %{__struct__: ConfigProto.OrgListResV1} = org_res} = result)
       assert(length(org_res.orgs) == 1)
-    end
-  end
-
-  @tag :skip
-  describe "create" do
-    test "returns an OrgV1 given a valid OrgCreateReqV1" do
-      assert(0 == length(Repo.all(DB.Organization)))
-
-      org =
-        valid_core_organization()
-        |> OrganizationView.organization_params()
-        |> ConfigProto.OrgV1.new()
-
-      req = ConfigProto.OrgCreateReqV1.new(%{org: org})
-
-      {:ok, channel} = GRPC.Stub.connect("localhost:50051")
-
-      result = ConfigProto.Org.Stub.create(channel, req)
-
-      assert({:ok, %{__struct__: ConfigProto.OrgV1}} = result)
-
-      assert(1 == length(Repo.all(DB.Organization)))
     end
   end
 

@@ -22,7 +22,6 @@ defmodule HeliumConfig.DB.RouteTest do
 
   describe "Route.changeset/2" do
     test "returns a valid changeset given a valid HTTP Roaming Core.Route", %{db_org: org} do
-      IO.inspect(Repo.all(Organization), label: "ORGS")
       roaming_route = valid_http_roaming_route(org.oui)
       got = Route.changeset(%Route{}, roaming_route)
 
