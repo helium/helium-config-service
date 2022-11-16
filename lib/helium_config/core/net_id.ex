@@ -62,6 +62,8 @@ defmodule HeliumConfig.Core.NetID do
     |> Base.encode16()
   end
 
+  # def parse(<<_discard::binary-size(1), rest::binary-size(3)>>), do: parse(rest)
+
   def parse(<<0::3, rfu::integer()-size(15), nwk_id::integer-size(6)>>),
     do: {:net_id_sponsor, rfu, nwk_id}
 

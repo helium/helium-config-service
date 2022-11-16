@@ -31,6 +31,7 @@ defmodule HeliumConfigGRPC.OrgServer do
   def create_roamer(%{__struct__: ConfigProto.OrgCreateRoamerReqV1} = req, _stream) do
     owner_pubkey = Core.Crypto.bin_to_pubkey(req.owner)
     payer_pubkey = Core.Crypto.bin_to_pubkey(req.payer)
+
     org =
       owner_pubkey
       |> Core.Organization.new_roamer(payer_pubkey, Core.NetID.from_integer(req.net_id))

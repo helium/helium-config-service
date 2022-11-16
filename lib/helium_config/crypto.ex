@@ -34,9 +34,13 @@ defmodule HeliumConfig.Core.Crypto do
   end
 
   def b58_to_pubkey(b58) do
-    b58
-    |> :erlang.binary_to_list()
-    |> :libp2p_crypto.b58_to_pubkey()
+    try do
+      b58
+      |> :erlang.binary_to_list()
+      |> :libp2p_crypto.b58_to_pubkey()
+    rescue
+      e in ArgumentError -> {:error, "Invalid b58 pubkey #{inspect(b58)}: #{e.message}"}
+    end
   end
 
   def pubkey_to_bin(pub_key) do

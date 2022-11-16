@@ -34,7 +34,7 @@ defmodule HeliumConfig.DB.Organization do
 
   def changeset(organization = %__MODULE__{}, fields = %{}) do
     organization
-    |> cast(fields, [:owner_pubkey, :payer_pubkey])
+    |> cast(fields, [:oui, :owner_pubkey, :payer_pubkey])
     |> cast_assoc(:routes)
   end
 

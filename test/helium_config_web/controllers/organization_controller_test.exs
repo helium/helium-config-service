@@ -52,11 +52,12 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
     end
 
     test "returns 400 given invalid inputs", %{conn: conn} do
-      bad_org =
-        valid_core_organization()
-        |> Map.put(:oui, -1)
+      good_org = valid_core_organization()
 
-      bad_json = OrganizationView.organization_json(bad_org)
+      bad_json =
+        good_org
+        |> OrganizationView.organization_json()
+        |> Map.put("owner_pubkey", :null)
 
       {400, _headers, body} =
         assert_error_sent 400, fn ->
@@ -66,7 +67,8 @@ defmodule HeliumConfigWeb.OrganizationControllerTest do
       assert(
         body ==
           Jason.encode!(%{
-            error: "invalid organization: [oui: \"oui must be a positive unsigned integer\"]"
+            error:
+              "invalid organization: [owner_pubkey: \"pubkey must be type :ecc_compact or :ed25519\"]"
           })
       )
     end

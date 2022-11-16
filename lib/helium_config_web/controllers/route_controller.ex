@@ -19,6 +19,7 @@ defmodule HeliumConfigWeb.RouteController do
     route =
       route_params
       |> Core.Route.from_web()
+      |> Core.RouteValidator.validate!()
       |> HeliumConfig.create_route()
 
     render(conn, "route.json", route: route)

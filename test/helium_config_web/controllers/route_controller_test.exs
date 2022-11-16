@@ -52,9 +52,21 @@ defmodule HeliumConfigWeb.RouteControllerTest do
       core_org = valid_core_organization()
       DB.create_organization!(core_org)
 
+      nwk_id = 0
+      net_id = Core.NetID.new(:net_id_sponsor, 11, nwk_id)
+      net_id_hex = Core.NetID.to_hex_str(net_id)
+
+      new_start =
+        valid_devaddr(nwk_id, 1)
+        |> Core.Devaddr.to_hex_str()
+
+      new_end =
+        valid_devaddr(nwk_id, 15)
+        |> Core.Devaddr.to_hex_str()
+
       new_route_params = %{
         "oui" => core_org.oui,
-        "net_id" => "00000A",
+        "net_id" => net_id_hex,
         "max_copies" => 3,
         "server" => %{
           "host" => "server10.testdomain.com",
@@ -64,7 +76,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
           }
         },
         "devaddr_ranges" => [
-          %{"start_addr" => "00020000", "end_addr" => "0002FFFF"}
+          %{"start_addr" => new_start, "end_addr" => new_end}
         ],
         "euis" => [
           %{"app_eui" => "1111111100000000", "dev_eui" => "2222222200000000"}
@@ -85,10 +97,15 @@ defmodule HeliumConfigWeb.RouteControllerTest do
       route = hd(db_org.routes)
       valid_route_id = route.id
 
+      nwk_id = 0
+      net_id_hex = Core.NetID.new(:net_id_sponsor, 11, nwk_id) |> Core.NetID.to_hex_str()
+      new_start = valid_devaddr(nwk_id, 1) |> Core.Devaddr.to_hex_str()
+      new_end = valid_devaddr(nwk_id, 100) |> Core.Devaddr.to_hex_str()
+
       new_route_params = %{
         "id" => valid_route_id,
         "oui" => core_org.oui,
-        "net_id" => "00000A",
+        "net_id" => net_id_hex,
         "max_copies" => 5,
         "server" => %{
           "host" => "server10.testdomain.com",
@@ -98,7 +115,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
           }
         },
         "devaddr_ranges" => [
-          %{"start_addr" => "00020000", "end_addr" => "0002FFFF"}
+          %{"start_addr" => new_start, "end_addr" => new_end}
         ],
         "euis" => [
           %{"app_eui" => "1111111100000000", "dev_eui" => "2222222200000000"}

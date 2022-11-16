@@ -33,6 +33,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
       )
     end
 
+    @tag :skip
     test "returns an error when given an OUI that is not an integer" do
       given =
         valid_core_organization()
@@ -43,6 +44,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
       assert(expected == OrganizationValidator.validate(given))
     end
 
+    @tag :skip
     test "returns an error when given an OUI that is a negative number" do
       given =
         valid_core_organization()
