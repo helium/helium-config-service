@@ -48,9 +48,13 @@ defmodule HeliumConfigGRPC.OrgServer do
   end
 
   def get(%{__struct__: ConfigProto.OrgGetReqV1} = req, _stream) do
-    req.oui
-    |> HeliumConfig.get_organization()
-    |> OrganizationView.organization_params()
-    |> ConfigProto.OrgV1.new()
+    org_params =
+      req.oui
+      |> HeliumConfig.get_organization()
+      |> OrganizationView.organization_params()
+
+    ConfigProto.OrgResV1.new(%{
+      org: org_params
+    })
   end
 end
