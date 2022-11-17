@@ -5,13 +5,13 @@ defmodule HeliumConfig.Core.NetIDTest do
 
   describe "NetID.from_bin/1" do
     test "correctly parses a valid sponsor level NetID from a binary" do
-      rfu = 3
+      rfu = 0
       nwk_id = 4
       bin = <<0::3, rfu::integer()-size(15), nwk_id::integer()-size(6)>>
 
       expected = %NetID{
         type: :net_id_sponsor,
-        rfu: rfu,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -25,7 +25,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_reserved1,
-        rfu: rfu,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -39,7 +39,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_reserved2,
-        rfu: rfu,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -52,7 +52,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_contributor,
-        rfu: nil,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -65,7 +65,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_reserved4,
-        rfu: nil,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -78,7 +78,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_reserved5,
-        rfu: nil,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -91,7 +91,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_adopter,
-        rfu: nil,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -104,7 +104,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_reserved7,
-        rfu: nil,
+        rfu: 0,
         nwk_id: nwk_id
       }
 
@@ -118,7 +118,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_sponsor,
-        rfu: 3,
+        rfu: 0,
         nwk_id: 4
       }
 
@@ -130,7 +130,7 @@ defmodule HeliumConfig.Core.NetIDTest do
 
       expected = %NetID{
         type: :net_id_adopter,
-        rfu: nil,
+        rfu: 0,
         nwk_id: 42
       }
 

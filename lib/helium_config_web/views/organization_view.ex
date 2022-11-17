@@ -17,7 +17,8 @@ defmodule HeliumConfigWeb.OrganizationView do
       oui: org.oui,
       owner_pubkey: Core.Crypto.pubkey_to_b58(org.owner_pubkey),
       payer_pubkey: Core.Crypto.pubkey_to_b58(org.payer_pubkey),
-      routes: Enum.map(org.routes, &RouteView.organization_route_json/1)
+      routes: Enum.map(org.routes, &RouteView.organization_route_json/1),
+      devaddr_constraints: RouteView.devaddr_range_json(org.devaddr_constraints)
     }
   end
 end

@@ -201,22 +201,22 @@ defmodule HeliumConfig.Core.OrganizationTest do
 
       route1 =
         valid_core_route()
-        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, nwk_id))
         |> Map.put(:devaddr_ranges, [range1])
 
       route2 =
         valid_core_route()
-        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, nwk_id))
         |> Map.put(:devaddr_ranges, [range2, range1])
 
       route3 =
         valid_core_route()
-        |> Map.put(:net_id, NetID.new(:net_id_contributor, 11, nwk_id))
+        |> Map.put(:net_id, NetID.new(:net_id_contributor, nwk_id))
         |> Map.put(:devaddr_ranges, [range2])
 
       route4 =
         valid_core_route()
-        |> Map.put(:net_id, NetID.new(:net_id_sponsor, 12, nwk_id_2))
+        |> Map.put(:net_id, NetID.new(:net_id_sponsor, nwk_id_2))
         |> Map.put(:devaddr_ranges, [range3])
 
       org = %Organization{
@@ -234,7 +234,7 @@ defmodule HeliumConfig.Core.OrganizationTest do
 
   describe "Organization.new_roamer/3" do
     test "returns an %Organization{} with Devaddr constraints computed from the given NetID" do
-      net_id = NetID.new(:net_id_sponsor, 11, 42)
+      net_id = NetID.new(:net_id_sponsor, 42)
       %{public: owner_key} = Crypto.generate_key_pair()
       %{public: payer_key} = Crypto.generate_key_pair()
 

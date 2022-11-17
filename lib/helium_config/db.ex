@@ -120,6 +120,6 @@ defmodule HeliumConfig.DB do
   end
 
   defp organization_preloads(%DB.Organization{} = org) do
-    Repo.preload(org, [:routes, [routes: [:server, :devaddr_ranges, :euis]]])
+    Repo.preload(org, [:devaddr_constraints, :routes, [routes: [:server, :devaddr_ranges, :euis]]])
   end
 end

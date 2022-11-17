@@ -14,7 +14,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       expected = %{
         id: "11111111-2222-3333-4444-555555555555",
         oui: 1,
-        net_id: 2688,
+        net_id: valid_net_id(0),
         max_copies: 2,
         server: %{
           host: "server1.testdomain.com",
@@ -51,7 +51,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       expected = %{
         id: "22222222-2222-3333-4444-555555555555",
         oui: 1,
-        net_id: 2688,
+        net_id: valid_net_id(0),
         max_copies: 2,
         server: %{
           host: "server1.testdomain.com",
@@ -107,7 +107,7 @@ defmodule HeliumConfigGRPC.RouteViewTest do
       expected = %{
         id: "33333333-2222-3333-4444-555555555555",
         oui: 1,
-        net_id: 2688,
+        net_id: valid_net_id(0),
         max_copies: 2,
         server: %{
           host: "server1.testdomain.com",

@@ -8,7 +8,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
 
   describe "OrganizationValidator.validate/1" do
     test "returns an error when given a Route outside the Organization's devaddr_constraints" do
-      net_id = Core.NetID.new(:net_id_contributor, 11, 42)
+      net_id = Core.NetID.new(:net_id_contributor, 42)
       constraint = Core.DevaddrRange.from_net_id(net_id)
 
       bad_range = Core.DevaddrRange.new(:devaddr_13x13, 12, 10, 20)
@@ -28,7 +28,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
 
       assert(
         [
-          "start addr in {%HeliumConfig.Core.Devaddr{F801800A}, %HeliumConfig.Core.Devaddr{F8018014}} must have the same NwkID as %HeliumConfig.Core.NetID{000A80}"
+          "start addr in {%HeliumConfig.Core.Devaddr{F801800A}, %HeliumConfig.Core.Devaddr{F8018014}} must have the same NwkID as %HeliumConfig.Core.NetID{000000}"
         ] == route_errors
       )
     end
@@ -87,7 +87,7 @@ defmodule HeliumConfig.Core.OrganizationValidatorTest do
 
     test "returns an error when :routes contains an invalid route" do
       nwk_id = 7
-      net_id = Core.NetID.new(:net_id_sponsor, 42, nwk_id)
+      net_id = Core.NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = Core.NetID.to_integer(net_id)
 
       invalid_start = Core.Devaddr.new(:devaddr_6x25, nwk_id + 1, 1)

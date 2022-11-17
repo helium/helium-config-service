@@ -37,6 +37,22 @@ defmodule HeliumConfig.Core.DevaddrRange do
     {start_addr, end_addr}
   end
 
+  def to_net_id({%Devaddr{} = s, %Devaddr{}}) do
+    net_id_type = devaddr_type_to_net_id_type(s.type)
+    nwk_id = s.nwk_id
+
+    NetID.new(net_id_type, nwk_id)
+  end
+
+  def devaddr_type_to_net_id_type(:devaddr_6x25), do: :net_id_sponsor
+  def devaddr_type_to_net_id_type(:devaddr_6x24), do: :net_id_reserved1
+  def devaddr_type_to_net_id_type(:devaddr_9x20), do: :net_id_reserved2
+  def devaddr_type_to_net_id_type(:devaddr_11x17), do: :net_id_contributor
+  def devaddr_type_to_net_id_type(:devaddr_12x15), do: :net_id_reserved4
+  def devaddr_type_to_net_id_type(:devaddr_13x13), do: :net_id_reserved5
+  def devaddr_type_to_net_id_type(:devaddr_15x10), do: :net_id_adopter
+  def devaddr_type_to_net_id_type(:devaddr_17x7), do: :net_id_reserved7
+
   def member?(
         {
           %Devaddr{type: addr_type, nwk_id: nwk_id, nwk_addr: start_addr},

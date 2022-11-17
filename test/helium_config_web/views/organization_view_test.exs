@@ -21,6 +21,9 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
         oui: 1,
         owner_pubkey: owner_b58,
         payer_pubkey: payer_b58,
+        devaddr_constraints: [
+          %{start_addr: "00010000", end_addr: "0030001A"}
+        ],
         routes: [
           %{
             id: "11111111-2222-3333-4444-555555555555",
@@ -34,7 +37,7 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
                 dev_eui: "FAAAAAAAAAAAAACE"
               }
             ],
-            net_id: "000A80",
+            net_id: "000000",
             max_copies: 2,
             server: %{
               host: "server1.testdomain.com",
@@ -59,7 +62,7 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
                 dev_eui: "FAAAAAAAAAAAAACE"
               }
             ],
-            net_id: "000A80",
+            net_id: "000000",
             max_copies: 2,
             server: %{
               host: "server1.testdomain.com",
@@ -97,7 +100,7 @@ defmodule HeliumConfigWeb.OrganizationViewTest do
                 dev_eui: "FAAAAAAAAAAAAACE"
               }
             ],
-            net_id: "000A80",
+            net_id: "000000",
             max_copies: 2,
             server: %{
               host: "server1.testdomain.com",

@@ -165,7 +165,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       new_route =
         %{
           oui: oui,
-          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 1, 11)),
+          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 11)),
           devaddr_ranges: [
             %{
               start_addr: Core.Devaddr.to_integer(Core.Devaddr.new(:devaddr_6x25, 11, 1)),
@@ -214,7 +214,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       new_route =
         %{
           oui: oui,
-          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 1, 11)),
+          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 11)),
           devaddr_ranges: [
             %{
               start_addr: Core.Devaddr.to_integer(Core.Devaddr.new(:devaddr_6x25, 11, 1)),
@@ -264,7 +264,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       new_route =
         %{
           oui: bad_oui,
-          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 1, 11)),
+          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 11)),
           devaddr_ranges: [
             %{
               start_addr: Core.Devaddr.to_integer(Core.Devaddr.new(:devaddr_6x25, 11, 1)),
@@ -317,7 +317,7 @@ defmodule HeliumConfigGRPC.RouteServerTest do
       new_route =
         %{
           oui: oui,
-          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 1, 11)),
+          net_id: Core.NetID.to_integer(Core.NetID.new(:net_id_sponsor, 11)),
           devaddr_ranges: [
             %{
               start_addr: Core.Devaddr.to_integer(Core.Devaddr.new(:devaddr_6x25, 11, 1)),

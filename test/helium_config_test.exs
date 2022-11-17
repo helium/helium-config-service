@@ -18,7 +18,8 @@ defmodule HeliumConfigTest do
     test "returns an Organization given valid public keys and a net ID" do
       owner = Core.Crypto.generate_key_pair()
       payer = Core.Crypto.generate_key_pair()
-      net_id = Core.NetID.new(:net_id_sponsor, 11, 42)
+      net_id = Core.NetID.new(:net_id_sponsor, 42)
+      constraint = Core.DevaddrRange.from_net_id(net_id)
 
       got = HeliumConfig.create_roamer_organization(owner.public, payer.public, net_id)
       got_minus_oui = Map.put(got, :oui, nil)
@@ -27,7 +28,8 @@ defmodule HeliumConfigTest do
         oui: nil,
         owner_pubkey: owner.public,
         payer_pubkey: payer.public,
-        routes: []
+        routes: [],
+        devaddr_constraints: [constraint]
       }
 
       assert(expected == got_minus_oui)

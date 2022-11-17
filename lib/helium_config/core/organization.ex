@@ -79,9 +79,19 @@ defmodule HeliumConfig.Core.Organization do
     %__MODULE__{
       oui: Decimal.to_integer(db_org.oui),
       owner_pubkey: Core.Crypto.b58_to_pubkey(db_org.owner_pubkey),
-      payer_pubkey: Core.Crypto.b58_to_pubkey(db_org.payer_pubkey)
+      payer_pubkey: Core.Crypto.b58_to_pubkey(db_org.payer_pubkey),
+      devaddr_constraints: Enum.map(db_org.devaddr_constraints, &constraint_from_db/1)
     }
     |> maybe_routes_from_db(db_org.routes)
+  end
+
+  defp constraint_from_db(%DB.DevaddrConstraint{
+         type: type,
+         nwk_id: nwk_id,
+         start_nwk_addr: start_addr,
+         end_nwk_addr: end_addr
+       }) do
+    Core.DevaddrRange.new(type, nwk_id, start_addr, end_addr)
   end
 
   defp maybe_routes_from_db(core_org, routes) when is_list(routes) do

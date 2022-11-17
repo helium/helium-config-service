@@ -17,6 +17,11 @@ defmodule HeliumConfig.DB.Organization do
       references: :oui,
       on_replace: :delete
 
+    has_many :devaddr_constraints, DB.DevaddrConstraint,
+      foreign_key: :oui,
+      references: :oui,
+      on_replace: :delete
+
     timestamps()
   end
 
@@ -25,7 +30,8 @@ defmodule HeliumConfig.DB.Organization do
       %{
         oui: core_org.oui,
         owner_pubkey: Core.Crypto.pubkey_to_b58(core_org.owner_pubkey),
-        payer_pubkey: Core.Crypto.pubkey_to_b58(core_org.payer_pubkey)
+        payer_pubkey: Core.Crypto.pubkey_to_b58(core_org.payer_pubkey),
+        devaddr_constraints: constraint_params(core_org.devaddr_constraints)
       }
       |> maybe_add_routes(core_org.routes)
 
@@ -36,6 +42,7 @@ defmodule HeliumConfig.DB.Organization do
     organization
     |> cast(fields, [:oui, :owner_pubkey, :payer_pubkey])
     |> cast_assoc(:routes)
+    |> cast_assoc(:devaddr_constraints)
   end
 
   defp maybe_add_routes(fields, routes) when is_list(routes) do
@@ -43,4 +50,15 @@ defmodule HeliumConfig.DB.Organization do
   end
 
   defp maybe_add_routes(fields, _), do: fields
+
+  defp constraint_params(ranges) do
+    Enum.map(ranges, fn {%Core.Devaddr{} = s, %Core.Devaddr{} = e} ->
+      %{
+        type: s.type,
+        nwk_id: s.nwk_id,
+        start_nwk_addr: s.nwk_addr,
+        end_nwk_addr: e.nwk_addr
+      }
+    end)
+  end
 end

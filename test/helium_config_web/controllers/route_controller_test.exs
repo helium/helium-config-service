@@ -53,7 +53,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
       DB.create_organization!(core_org)
 
       nwk_id = 0
-      net_id = Core.NetID.new(:net_id_sponsor, 11, nwk_id)
+      net_id = Core.NetID.new(:net_id_sponsor, nwk_id)
       net_id_hex = Core.NetID.to_hex_str(net_id)
 
       new_start =
@@ -98,7 +98,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
       valid_route_id = route.id
 
       nwk_id = 0
-      net_id_hex = Core.NetID.new(:net_id_sponsor, 11, nwk_id) |> Core.NetID.to_hex_str()
+      net_id_hex = Core.NetID.new(:net_id_sponsor, nwk_id) |> Core.NetID.to_hex_str()
       new_start = valid_devaddr(nwk_id, 1) |> Core.Devaddr.to_hex_str()
       new_end = valid_devaddr(nwk_id, 100) |> Core.Devaddr.to_hex_str()
 

@@ -295,6 +295,7 @@ defmodule HeliumConfig.DBTest do
       assert(3 == length(Repo.all(DB.EuiPair)))
       assert(6 == length(Repo.all(DB.DevaddrRange)))
       assert(3 == length(Repo.all(DB.RouteServer)))
+      assert(1 == length(Repo.all(DB.DevaddrConstraint)))
     end
 
     test "raises ConstraintError if the organization record already exists" do

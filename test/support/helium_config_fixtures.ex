@@ -13,9 +13,9 @@ defmodule HeliumConfig.Fixtures do
     Core.Devaddr.new(:devaddr_6x25, nwk_id, nwk_addr)
   end
 
-  def valid_net_id(rfu, nwk_id) do
+  def valid_net_id(nwk_id) do
     :net_id_sponsor
-    |> Core.NetID.new(rfu, nwk_id)
+    |> Core.NetID.new(nwk_id)
     |> Core.NetID.to_integer()
   end
 
@@ -31,7 +31,8 @@ defmodule HeliumConfig.Fixtures do
         valid_http_roaming_route(),
         valid_gwmp_route(),
         valid_packet_router_route()
-      ]
+      ],
+      devaddr_constraints: [valid_constraint()]
     }
   end
 
@@ -46,13 +47,17 @@ defmodule HeliumConfig.Fixtures do
     |> Map.put(:payer_pubkey, payer_pubkey)
   end
 
+  def valid_constraint do
+    {valid_devaddr(0, 65536), valid_devaddr(0, 3_145_754)}
+  end
+
   def valid_core_route(), do: valid_core_route(nil)
 
   def valid_core_route(oui) do
     %Core.Route{
       id: oui,
       oui: 1,
-      net_id: valid_net_id(42, 0),
+      net_id: valid_net_id(0),
       max_copies: 2,
       server: %Core.RouteServer{
         host: "server1.testdomain.com",

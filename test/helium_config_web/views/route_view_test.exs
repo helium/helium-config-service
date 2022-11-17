@@ -21,7 +21,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
       %{
         id: "11111111-2222-3333-4444-555555555555",
         oui: 1,
-        net_id: "000A80",
+        net_id: "000000",
         max_copies: 2,
         server: %{
           host: "server1.testdomain.com",
@@ -57,7 +57,7 @@ defmodule HeliumConfigWeb.Views.RouteViewTest do
 
     expected = %{
       id: "11111111-2222-3333-4444-555555555555",
-      net_id: "000A80",
+      net_id: "000000",
       max_copies: 2,
       server: %{
         host: "server1.testdomain.com",

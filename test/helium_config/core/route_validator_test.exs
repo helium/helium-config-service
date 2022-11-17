@@ -20,9 +20,12 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
       )
     end
 
-    test "returns an error when the given NetID is 0 or less" do
-      assert({:error, "net_id must be greater than 0"} == RouteValidator.validate_net_id(0))
-      assert({:error, "net_id must be greater than 0"} == RouteValidator.validate_net_id(-1))
+    test "returns an error when the given NetID is less than 0" do
+      assert(:ok == RouteValidator.validate_net_id(0))
+
+      assert(
+        {:error, "net_id must be greater or equal to 0"} == RouteValidator.validate_net_id(-1)
+      )
     end
 
     test "returns :ok when the given NetID is an integer beteween 1 and 16777215, inclusive" do
@@ -69,8 +72,7 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
   describe "RouteValidator.validate_net_id_and_devaddr_range/2" do
     test "returns an error when the Devaddr range start has a NwkID different from the NetID" do
       nwk_id = 7
-      rfu = 42
-      net_id = NetID.new(:net_id_sponsor, rfu, nwk_id)
+      net_id = NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = NetID.to_integer(net_id)
 
       devaddr_start = Devaddr.new(:devaddr_6x25, nwk_id - 1, 1)
@@ -90,8 +92,7 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
 
     test "returns an error when the Devaddr range end has a NwkID different from the NetID" do
       nwk_id = 7
-      rfu = 42
-      net_id = NetID.new(:net_id_sponsor, rfu, nwk_id)
+      net_id = NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = NetID.to_integer(net_id)
 
       devaddr_start = Devaddr.new(:devaddr_6x25, nwk_id, 1)
@@ -111,8 +112,7 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
 
     test "returns :ok given a valid NetID and Devaddr range" do
       nwk_id = 7
-      rfu = 42
-      net_id = NetID.new(:net_id_sponsor, rfu, nwk_id)
+      net_id = NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = NetID.to_integer(net_id)
 
       devaddr_start = Devaddr.new(:devaddr_6x25, nwk_id, 1)
@@ -130,7 +130,7 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
   describe "RouteValidator.validate_net_id_and_devaddr_ranges/2" do
     test "does not execute checks if any previous errors have been reported" do
       nwk_id = 7
-      net_id = NetID.new(:net_id_sponsor, 42, nwk_id)
+      net_id = NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = NetID.to_integer(net_id)
 
       # Range start doesn't match NwkID
@@ -155,7 +155,7 @@ defmodule HeliumConfig.Core.RouteValidatorTest do
 
     test "executes checks if no previous errors have been reported" do
       nwk_id = 7
-      net_id = NetID.new(:net_id_sponsor, 42, nwk_id)
+      net_id = NetID.new(:net_id_sponsor, nwk_id)
       net_id_bin = NetID.to_integer(net_id)
 
       # Range start doesn't match NwkID

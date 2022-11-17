@@ -1,12 +1,11 @@
 defmodule HeliumConfig.Core.NetID do
-  defstruct [:type, :rfu, :nwk_id]
+  defstruct [:type, :nwk_id, rfu: 0]
 
-  def new(type, rfu, nwk_id) do
+  def new(type, nwk_id) do
     struct!(
       __MODULE__,
       %{
         type: type,
-        rfu: rfu,
         nwk_id: nwk_id
       }
     )
@@ -47,11 +46,11 @@ defmodule HeliumConfig.Core.NetID do
   end
 
   def from_bin(bin) do
-    {type, rfu, nwk_id} = parse(bin)
+    {type, nwk_id} = parse(bin)
 
     %__MODULE__{
       type: type,
-      rfu: rfu,
+      rfu: 0,
       nwk_id: nwk_id
     }
   end
@@ -64,20 +63,20 @@ defmodule HeliumConfig.Core.NetID do
 
   # def parse(<<_discard::binary-size(1), rest::binary-size(3)>>), do: parse(rest)
 
-  def parse(<<0::3, rfu::integer()-size(15), nwk_id::integer-size(6)>>),
-    do: {:net_id_sponsor, rfu, nwk_id}
+  def parse(<<0::3, _rfu::integer()-size(15), nwk_id::integer-size(6)>>),
+    do: {:net_id_sponsor, nwk_id}
 
-  def parse(<<1::3, rfu::integer()-size(15), nwk_id::integer-size(6)>>),
-    do: {:net_id_reserved1, rfu, nwk_id}
+  def parse(<<1::3, _rfu::integer()-size(15), nwk_id::integer-size(6)>>),
+    do: {:net_id_reserved1, nwk_id}
 
-  def parse(<<2::3, rfu::integer()-size(12), nwk_id::integer-size(9)>>),
-    do: {:net_id_reserved2, rfu, nwk_id}
+  def parse(<<2::3, _rfu::integer()-size(12), nwk_id::integer-size(9)>>),
+    do: {:net_id_reserved2, nwk_id}
 
-  def parse(<<3::3, nwk_id::integer()-size(21)>>), do: {:net_id_contributor, nil, nwk_id}
-  def parse(<<4::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved4, nil, nwk_id}
-  def parse(<<5::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved5, nil, nwk_id}
-  def parse(<<6::3, nwk_id::integer()-size(21)>>), do: {:net_id_adopter, nil, nwk_id}
-  def parse(<<7::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved7, nil, nwk_id}
+  def parse(<<3::3, nwk_id::integer()-size(21)>>), do: {:net_id_contributor, nwk_id}
+  def parse(<<4::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved4, nwk_id}
+  def parse(<<5::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved5, nwk_id}
+  def parse(<<6::3, nwk_id::integer()-size(21)>>), do: {:net_id_adopter, nwk_id}
+  def parse(<<7::3, nwk_id::integer()-size(21)>>), do: {:net_id_reserved7, nwk_id}
 end
 
 defimpl String.Chars, for: HeliumConfig.Core.NetID do

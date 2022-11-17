@@ -167,7 +167,7 @@ defmodule HeliumConfig.Core.RouteTest do
 
       net_id =
         :net_id_sponsor
-        |> NetID.new(11, nwk_id)
+        |> NetID.new(nwk_id)
         |> NetID.to_integer()
 
       given =
@@ -232,7 +232,7 @@ defmodule HeliumConfig.Core.RouteTest do
 
       net_id =
         :net_id_sponsor
-        |> NetID.new(11, nwk_id)
+        |> NetID.new(nwk_id)
         |> NetID.to_integer()
 
       given =
@@ -299,7 +299,7 @@ defmodule HeliumConfig.Core.RouteTest do
 
       net_id =
         :net_id_sponsor
-        |> NetID.new(11, nwk_id)
+        |> NetID.new(nwk_id)
         |> NetID.to_integer()
 
       given =

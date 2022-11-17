@@ -30,7 +30,7 @@ defmodule HeliumConfig.Core.RouteValidator do
 
   def validate_net_id(id) do
     with :ok <- check(is_integer(id), {:error, "net_id must be an integer"}),
-         :ok <- check(id > 0, {:error, "net_id must be greater than 0"}),
+         :ok <- check(id >= 0, {:error, "net_id must be greater or equal to 0"}),
          :ok <-
            check(
              id <= @net_id_max_value,
