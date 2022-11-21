@@ -1,51 +1,7 @@
 defmodule HeliumConfig.DB.UpdateNotifier do
-  @moduledoc """
-
-  This module is a GenServer that implements a simple
-  publish/subscribe system to signal other processes whenever there is
-  a change to configuration data.  It is primarily used by
-  `HeliumConfigGRPC.RouteStreamWorker` to push updates to RPC callers.
-
-  If started without arguments, UpdateNotifier will register itself as
-  `:update_notifier`.  In that case, the functions `subscribe/0`,
-  `unsubscribe/0`, can be used.
-
-  If started with `registered: false`, functions `subscribe/1`,
-  `subscribe/2`, `unsubscribe/1`, and `unsubscribe/2` must be used.
-  This is mainly useful in testing scenarios.
-
-  If a change is made to the database (say, through calls to the
-  `HeliumConfig` module), subscribed processes will receive an
-  `:update` message.  It is recommended that subscribers implement
-  callbacks for BOTH calls and casts.  For example:
-
-
-  ```
-  @impl true
-  def handle_call(:update, _from, state) do
-    # Handle update...
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_cast(:update, state) do
-    # Handle update...
-    {:noreply, state}
-  end
-  ```
-
-  """
-
   use GenServer
 
   defmodule State do
-    @moduledoc """
-
-    This module represents the internal state of an UpdateNotifier
-    process and contains functions for manipulating the state.
-
-    """
-
     defstruct subscribers: MapSet.new()
 
     def subscribe(state = %State{subscribers: subscribers}, pid) do
@@ -58,6 +14,7 @@ defmodule HeliumConfig.DB.UpdateNotifier do
   end
 
   alias __MODULE__.State
+  alias HeliumConfig.Core
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
@@ -97,21 +54,51 @@ defmodule HeliumConfig.DB.UpdateNotifier do
     GenServer.call(notifier, {:unsubscribe, pid})
   end
 
-  def notify_call do
-    notify_call(:update_notifier)
+  ##
+  ## Route Created
+  ##
+
+  def call_route_created(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_created, core_route}})
   end
 
-  def notify_call(notifier) do
-    GenServer.call(notifier, :notify)
+  def cast_route_created(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_created, core_route}})
   end
 
-  def notify_cast do
-    notify_cast(:update_notifier)
+  ##
+  ## Route Updated
+  ##
+
+  def call_route_updated(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_updated, core_route}})
   end
 
-  def notify_cast(notifier) do
-    GenServer.cast(notifier, :notify)
+  def cast_route_updated(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_updated, core_route}})
   end
+
+  ##
+  ## Route Deleted
+  ##
+
+  def call_route_deleted(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.call(notifier, {:notify, {:route_deleted, core_route}})
+  end
+
+  def cast_route_deleted(db_route, notifier \\ :update_notifier) do
+    core_route = Core.Route.from_db(db_route)
+    GenServer.cast(notifier, {:notify, {:route_deleted, core_route}})
+  end
+
+  ##
+  ## GenServer Callbacks
+  ##
 
   @impl true
   def handle_call({:subscribe, pid}, _from, state) do
@@ -124,10 +111,10 @@ defmodule HeliumConfig.DB.UpdateNotifier do
     {:reply, :ok, State.unsubscribe(state, pid)}
   end
 
-  def handle_call(:notify, _from, state) do
+  def handle_call({:notify, msg}, _from, state) do
     :ok =
       Enum.each(state.subscribers, fn subscriber ->
-        GenServer.call(subscriber, :update)
+        GenServer.call(subscriber, msg)
       end)
 
     {:reply, :ok, state}
@@ -138,10 +125,10 @@ defmodule HeliumConfig.DB.UpdateNotifier do
   end
 
   @impl true
-  def handle_cast(:notify, state) do
+  def handle_cast({:notify, msg}, state) do
     :ok =
       Enum.each(state.subscribers, fn subscriber ->
-        GenServer.cast(subscriber, :update)
+        GenServer.cast(subscriber, msg)
       end)
 
     {:noreply, state}

@@ -7,6 +7,11 @@ defmodule HeliumConfig.Application do
 
   @impl true
   def start(_type, _args) do
+    grpc_port =
+      :helium_config
+      |> Application.get_env(HeliumConfigGRPC.Endpoint)
+      |> Keyword.get(:port, 50051)
+
     children = [
       # Start the Ecto repository
       HeliumConfig.Repo,
@@ -18,10 +23,7 @@ defmodule HeliumConfig.Application do
       HeliumConfigWeb.Endpoint,
       # Start a worker by calling: HeliumConfig.Worker.start_link(arg)
       # {HeliumConfig.Worker, arg}
-      {GRPC.Server.Supervisor, {HeliumConfigGRPC.Endpoint, 50_051}},
-
-      # Start an UpdateNotifier to signal subscribers (e.g. GRPC
-      # clients) when an Organization is updated.
+      {GRPC.Server.Supervisor, {HeliumConfigGRPC.Endpoint, grpc_port}},
       HeliumConfig.DB.UpdateNotifier
     ]
 

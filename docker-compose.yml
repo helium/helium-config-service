@@ -1,22 +1,27 @@
 version: "3.0"
 services:
-        postgres:
-                image: postgres:13.4
-                container_name: postgres
-                restart: always
-                # volumes:
-                #         - "./data/postgres/:/var/lib/postgresql/data"
-                environment:
-                        - POSTGRES_DB=helium_config_prod
-                        - POSTGRES_USER=postgres
-                        - POSTGRES_PASSWORD=postgres
-                ports:
-                        - "5432:5432"
+  postgres:
+    image: postgres:13.4
+    container_name: hcs_postgres
+    restart: unless-stopped
+    volumes:
+      - /var/data/cs/postgres:/var/lib/postgresql/data
+      environment:
+        - POSTGRES_DB=helium_config_prod
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
 
-        helium_config:
-                image: hcs:latest
-                container_name: helium_config
-                ports:
-                        - "4000:4000"
-                        - "50051:50051"
-
+  helium_config:
+    build:
+      context: .
+    image: quay.io/team-helium/hcs:local
+    container_name: helium_config_service
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+      - "50051:50051"
+    environment:
+      - DATABASE_URL=ecto://postgres:postgres@postgres/helium_config_prod
+      - DATABASE_HOST=postgres
+      - PHX_HOST=localhost
+      - PORT=4000

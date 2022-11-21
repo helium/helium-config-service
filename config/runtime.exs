@@ -63,6 +63,31 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  grpc_port = String.to_integer(System.get_env("GRPC_PORT") || "50051")
+
+  config :helium_config, HeliumConfigGRPC.Endpoint, port: grpc_port
+
+  auth_enabled = System.get_env("AUTH_ENABLED", "true") == "true"
+
+  config :helium_config, HeliumConfigGRPC, auth_enabled: auth_enabled
+
+  if auth_enabled == true do
+    admin_keys_str =
+      System.get_env("ADMIN_KEYS") ||
+        raise """
+        environment variable ADMIN_KEYS is missing.
+
+        One B58-encoded public key is required.  Specify multiple keys by
+        separating them with commas.
+
+        For example: ADMIN_KEYS=112LK7NZrxtoNpu91c8D2xfd8gK8wXX6FtARzR7w9WrQRFhVrma4,11gCMoYKfS3skfHD8diGJadc94DgFRDnPDHA3kVpRR2Np8vtwmX
+        """
+
+    admin_keys = String.split(admin_keys_str, ~r/, */)
+
+    config :helium_config, HeliumConfigGRPC, admin_keys: admin_keys
+  end
+
   # ## Configuring the mailer
   #
   # In production you need to configure the mailer to use a different adapter.

@@ -1,0 +1,554 @@
+defmodule HeliumConfig.Core.RouteTest do
+  use ExUnit.Case
+
+  alias Proto.Helium.Config.RouteV1
+  alias HeliumConfig.Core.Route
+  alias HeliumConfig.Core.RouteServer
+  alias HeliumConfig.Core.HttpRoamingOpts
+  alias HeliumConfig.Core.GwmpOpts
+  alias HeliumConfig.Core.PacketRouterOpts
+  alias HeliumConfig.Core.DevaddrRange
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.NetID
+  alias HeliumConfig.DB
+
+  import HeliumConfig.Fixtures
+
+  describe "Route.from_web/1" do
+    test "can decode an HTTP Roaming Route from JSON params" do
+      json_params = %{
+        "net_id" => 7,
+        "oui" => 1,
+        "max_copies" => 1,
+        "server" => %{
+          "host" => "server1.testdomain.com",
+          "port" => 1000,
+          "protocol" => %{
+            "type" => "http_roaming",
+            "dedupe_window" => 1200,
+            "flow_type" => "async",
+            "path" => "/helium"
+          }
+        },
+        "euis" => [
+          %{"app_eui" => 100, "dev_eui" => 200},
+          %{"app_eui" => 300, "dev_eui" => 400}
+        ],
+        "devaddr_ranges" => [
+          %{"start_addr" => "00000001", "end_addr" => "000000FF"},
+          %{"start_addr" => "00000200", "end_addr" => "000002FF"}
+        ]
+      }
+
+      got = Route.from_web(json_params)
+
+      expected = %Route{
+        oui: 1,
+        net_id: 7,
+        max_copies: 1,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 1000,
+          protocol_opts: %HttpRoamingOpts{
+            dedupe_window: 1200,
+            flow_type: :async,
+            path: "/helium"
+          }
+        },
+        euis: [
+          %{app_eui: 100, dev_eui: 200},
+          %{app_eui: 300, dev_eui: 400}
+        ],
+        devaddr_ranges: [
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}},
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 512},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 767}}
+        ]
+      }
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.oui_from_web/1" do
+    test "converts string arguments from hex to integer" do
+      got = Route.oui_from_web("00FF")
+
+      expected = 255
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.max_copies_from_web/1" do
+    test "converts string arguments to integers, assuming base 10" do
+      got = Route.max_copies_from_web("15")
+
+      expected = 15
+
+      assert(got == expected)
+    end
+
+    test "accepts integer arguments as-is" do
+      got = Route.max_copies_from_web(15)
+
+      expected = 15
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.net_id_from_web/1" do
+    test "converts string arguments from hex to integer" do
+      got = Route.net_id_from_web("00FF")
+
+      expected = 255
+
+      assert(got == expected)
+    end
+
+    test "accepts integer arguments as-is" do
+      got = Route.net_id_from_web(255)
+
+      expected = 255
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.devaddr_range_from_web/1" do
+    test "converts string arguments from hex to integer" do
+      got =
+        Route.devaddr_range_from_web(%{
+          "start_addr" => "00000001",
+          "end_addr" => "000000FF"
+        })
+
+      expected =
+        {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+         %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
+
+      assert(got == expected)
+    end
+
+    test "accepts integer arguments as-is" do
+      got = Route.devaddr_range_from_web(%{"start_addr" => 0x1, "end_addr" => 0xFF})
+
+      expected =
+        {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+         %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}}
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.eui_pair_from_web/1" do
+    test "converts string arguments from hex to integer" do
+      got = Route.eui_pair_from_web(%{"app_eui" => "00FF", "dev_eui" => "00FE"})
+
+      expected = %{app_eui: 255, dev_eui: 254}
+
+      assert(got == expected)
+    end
+
+    test "accepts integer arguments as-is" do
+      got = Route.eui_pair_from_web(%{"app_eui" => 255, "dev_eui" => 254})
+
+      expected = %{app_eui: 255, dev_eui: 254}
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.from_db/1" do
+    test "returns a correct Core.Route given a valid HTTP Roaming DB.Route" do
+      nwk_id = 42
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(nwk_id)
+        |> NetID.to_integer()
+
+      given =
+        %DB.Route{}
+        |> DB.Route.changeset(%{
+          oui: 1,
+          net_id: net_id,
+          max_copies: 2,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 5555,
+            protocol_opts: %{
+              type: :http_roaming,
+              opts: %{
+                "dedupe_window" => 1800,
+                "flow_type" => "sync",
+                "path" => "/helium"
+              }
+            }
+          },
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x25,
+              nwk_id: nwk_id,
+              start_nwk_addr: 5,
+              end_nwk_addr: 50
+            }
+          ],
+          euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      expected = %Route{
+        oui: 1,
+        net_id: net_id,
+        max_copies: 2,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 5555,
+          protocol_opts: %HttpRoamingOpts{
+            dedupe_window: 1800,
+            flow_type: :sync,
+            path: "/helium"
+          }
+        },
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 5},
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 50}
+          }
+        ],
+        euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
+      }
+
+      got = Route.from_db(given)
+
+      assert(expected == got)
+    end
+
+    test "returns a correct Core.Route given a valid GWMP DB.Route" do
+      nwk_id = 7
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(nwk_id)
+        |> NetID.to_integer()
+
+      given =
+        %DB.Route{}
+        |> DB.Route.changeset(%{
+          oui: 1,
+          net_id: net_id,
+          max_copies: 2,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 5555,
+            protocol_opts: %{
+              type: :gwmp,
+              opts: %{
+                "mapping" => [
+                  %{"region" => "US915", "port" => 4000},
+                  %{"region" => "EU868", "port" => 3000}
+                ]
+              }
+            }
+          },
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x25,
+              nwk_id: nwk_id,
+              start_nwk_addr: 15,
+              end_nwk_addr: 20
+            }
+          ],
+          euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      expected = %Route{
+        oui: 1,
+        net_id: net_id,
+        max_copies: 2,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 5555,
+          protocol_opts: %GwmpOpts{
+            mapping: [
+              US915: 4000,
+              EU868: 3000
+            ]
+          }
+        },
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 15},
+            %Devaddr{type: :devaddr_6x25, nwk_id: nwk_id, nwk_addr: 20}
+          }
+        ],
+        euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
+      }
+
+      got = Route.from_db(given)
+
+      assert(expected == got)
+    end
+
+    test "returns a correct Core.Route given a valid Packet Route DB.Route" do
+      nwk_id = 42
+
+      net_id =
+        :net_id_sponsor
+        |> NetID.new(nwk_id)
+        |> NetID.to_integer()
+
+      given =
+        %DB.Route{}
+        |> DB.Route.changeset(%{
+          oui: 1,
+          net_id: net_id,
+          max_copies: 2,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 5555,
+            protocol_opts: %{
+              type: :packet_router,
+              opts: %{}
+            }
+          },
+          devaddr_ranges: [
+            %{
+              type: :devaddr_6x24,
+              nwk_id: nwk_id,
+              start_nwk_addr: 45,
+              end_nwk_addr: 90
+            }
+          ],
+          euis: [%{app_eui: 0x0000001_00000000, dev_eui: 0x00000002_00000000}]
+        })
+        |> Ecto.Changeset.apply_changes()
+
+      expected = %Route{
+        oui: 1,
+        net_id: net_id,
+        max_copies: 2,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 5555,
+          protocol_opts: %PacketRouterOpts{}
+        },
+        devaddr_ranges: [
+          {
+            %Devaddr{type: :devaddr_6x24, nwk_id: nwk_id, nwk_addr: 45},
+            %Devaddr{type: :devaddr_6x24, nwk_id: nwk_id, nwk_addr: 90}
+          }
+        ],
+        euis: [%{app_eui: 0x00000001_00000000, dev_eui: 0x00000002_00000000}]
+      }
+
+      got = Route.from_db(given)
+
+      assert(expected == got)
+    end
+  end
+
+  describe "Route.from_proto/1" do
+    test "can decode an HTTP Roaming RouteV1 protobuf" do
+      bin =
+        %{
+          id: "",
+          net_id: 7,
+          oui: 1,
+          max_copies: 2,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 1000,
+            protocol: {:http_roaming, %{dedupe_timeout: 1200, flow_type: :sync, path: "/helium"}}
+          },
+          euis: [
+            %{app_eui: 100, dev_eui: 200},
+            %{app_eui: 300, dev_eui: 400}
+          ],
+          devaddr_ranges: [
+            %{start_addr: 0x00000001, end_addr: 0x000000FF},
+            %{start_addr: 0x00000200, end_addr: 0x000002FF}
+          ]
+        }
+        |> RouteV1.new()
+        |> RouteV1.encode()
+
+      got =
+        bin
+        |> RouteV1.decode()
+        |> Route.from_proto()
+
+      expected = %Route{
+        id: "",
+        oui: 1,
+        net_id: 7,
+        max_copies: 2,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 1000,
+          protocol_opts: %HttpRoamingOpts{
+            dedupe_window: 1200,
+            flow_type: :sync,
+            path: "/helium"
+          }
+        },
+        euis: [
+          %{app_eui: 100, dev_eui: 200},
+          %{app_eui: 300, dev_eui: 400}
+        ],
+        devaddr_ranges: [
+          {%Devaddr{nwk_addr: 1, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 255, nwk_id: 0, type: :devaddr_6x25}},
+          {%Devaddr{nwk_addr: 512, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 767, nwk_id: 0, type: :devaddr_6x25}}
+        ]
+      }
+
+      assert(got == expected)
+    end
+
+    test "can decode a GWMP RouteV1 protobuf" do
+      bin =
+        %{
+          id: "",
+          net_id: 0,
+          oui: 1,
+          max_copies: 3,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 1000,
+            protocol:
+              {:gwmp, %{mapping: [%{region: :US915, port: 1000}, %{region: :EU868, port: 2000}]}}
+          },
+          euis: [
+            %{app_eui: 100, dev_eui: 200},
+            %{app_eui: 300, dev_eui: 400}
+          ],
+          devaddr_ranges: [
+            %{start_addr: 0x00000001, end_addr: 0x000000FF},
+            %{start_addr: 0x00000200, end_addr: 0x000002FF}
+          ]
+        }
+        |> RouteV1.new()
+        |> RouteV1.encode()
+
+      got =
+        bin
+        |> RouteV1.decode()
+        |> Route.from_proto()
+
+      expected = %Route{
+        id: "",
+        oui: 1,
+        net_id: 0,
+        max_copies: 3,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 1000,
+          protocol_opts: %GwmpOpts{
+            mapping: [
+              {:US915, 1000},
+              {:EU868, 2000}
+            ]
+          }
+        },
+        euis: [
+          %{app_eui: 100, dev_eui: 200},
+          %{app_eui: 300, dev_eui: 400}
+        ],
+        devaddr_ranges: [
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 1},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 255}},
+          {%Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 512},
+           %Devaddr{type: :devaddr_6x25, nwk_id: 0, nwk_addr: 767}}
+        ]
+      }
+
+      assert(got == expected)
+    end
+
+    test "can decode a Packet Router RouteV1 protobuf" do
+      bin =
+        %{
+          id: "",
+          net_id: 7,
+          oui: 1,
+          max_copies: 4,
+          server: %{
+            host: "server1.testdomain.com",
+            port: 1000,
+            protocol: {:packet_router, %{dummy_arg: true}}
+          },
+          euis: [
+            %{app_eui: 100, dev_eui: 200},
+            %{app_eui: 300, dev_eui: 400}
+          ],
+          devaddr_ranges: [
+            %{start_addr: 0x00000001, end_addr: 0x000000FF},
+            %{start_addr: 0x00000200, end_addr: 0x000002FF}
+          ]
+        }
+        |> RouteV1.new()
+        |> RouteV1.encode()
+
+      got =
+        bin
+        |> RouteV1.decode()
+        |> Route.from_proto()
+
+      expected = %Route{
+        id: "",
+        oui: 1,
+        net_id: 7,
+        max_copies: 4,
+        server: %RouteServer{
+          host: "server1.testdomain.com",
+          port: 1000,
+          protocol_opts: %PacketRouterOpts{}
+        },
+        euis: [
+          %{app_eui: 100, dev_eui: 200},
+          %{app_eui: 300, dev_eui: 400}
+        ],
+        devaddr_ranges: [
+          {%Devaddr{nwk_addr: 1, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 255, nwk_id: 0, type: :devaddr_6x25}},
+          {%Devaddr{nwk_addr: 512, nwk_id: 0, type: :devaddr_6x25},
+           %Devaddr{nwk_addr: 767, nwk_id: 0, type: :devaddr_6x25}}
+        ]
+      }
+
+      assert(got == expected)
+    end
+  end
+
+  describe "Route.member?/1" do
+    test "returns true given a route and a devaddr within the route's devaddr ranges" do
+      range = DevaddrRange.new(:devaddr_6x24, 42, 5, 15)
+
+      route =
+        valid_core_route()
+        |> Map.put(:devaddr_ranges, [range])
+
+      devaddr = Devaddr.new(:devaddr_6x24, 42, 7)
+
+      assert(true == Route.member?(route, devaddr))
+    end
+
+    test "returns false given a route and a devaddr outside the route's devaddr ranges" do
+      range = DevaddrRange.new(:devaddr_6x24, 42, 5, 15)
+
+      route =
+        valid_core_route()
+        |> Map.put(:devaddr_ranges, [range])
+
+      devaddr = Devaddr.new(:devaddr_6x24, 42, 16)
+
+      assert(false == Route.member?(route, devaddr))
+    end
+  end
+end

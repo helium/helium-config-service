@@ -1,111 +1,163 @@
 defmodule HeliumConfig.Core.Route do
-  @moduledoc """
-  Data module representing a Route.
-  """
-  alias HeliumConfig.Core.Lns
+  @enforce_keys [:net_id, :server, :max_copies, :euis, :devaddr_ranges]
+
+  defstruct [:id, :oui, :net_id, :server, max_copies: 1, euis: [], devaddr_ranges: []]
+
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.DevaddrRange
+  alias HeliumConfig.Core.RouteServer
   alias HeliumConfig.DB
 
-  # A string containing a DNS hostname or IP address
-  @type host_string :: String.t()
+  def new(params \\ %{}) do
+    server =
+      params
+      |> Map.get(:server, %{})
+      |> RouteServer.new()
 
-  @type eui_pair :: %{
-          required(:app_eui) => integer,
-          required(:dev_eui) => integer
-        }
+    params = Map.put(params, :server, server)
 
-  @type devaddr_range :: %{
-          required(:start_addr) => integer,
-          required(:end_addr) => integer
-        }
-
-  @type t :: %__MODULE__{
-          net_id: integer,
-          euis: [eui_pair],
-          devaddr_ranges: [devaddr_range]
-        }
-
-  # Valid keys for json_eui are:
-  # "app_eui" => integer,
-  # "dev_eui" => integer
-  @type json_eui :: %{String.t() => integer}
-
-  # Valid keys for json_devaddr_range are:
-  # "start_addr" => integer,
-  # "end_addr" => integer
-  @type json_devaddr_range :: %{String.t() => integer}
-
-  # Valid keys for json_params are:
-  # "net_id" => integer,
-  # "euis" => [json_eui],
-  # "devaddr_ranges" => [json_devaddr_range]
-  @type json_params :: %{String.t() => any()}
-
-  defstruct net_id: nil,
-            lns: nil,
-            euis: [],
-            devaddr_ranges: []
-
-  @spec new(json_params) :: t
-  def new(fields \\ %{}) do
-    struct!(__MODULE__, fields)
+    struct!(__MODULE__, params)
   end
 
-  def from_web(web_fields = %{}) do
+  def member?(%__MODULE__{devaddr_ranges: ranges}, devaddr = %Devaddr{}) do
+    Enum.any?(ranges, &DevaddrRange.member?(&1, devaddr))
+  end
+
+  def from_db(%DB.Route{} = db_route) do
+    %__MODULE__{
+      id: db_route.id,
+      oui: Decimal.to_integer(db_route.oui),
+      net_id: db_route.net_id,
+      max_copies: db_route.max_copies,
+      server: RouteServer.from_db(db_route.server),
+      euis: euis_from_db(db_route.euis),
+      devaddr_ranges: devaddr_ranges_from_db(db_route.devaddr_ranges)
+    }
+  end
+
+  def euis_from_db(euis) do
+    Enum.map(euis, fn %DB.EuiPair{app_eui: a, dev_eui: d} ->
+      %{
+        app_eui: Decimal.to_integer(a),
+        dev_eui: Decimal.to_integer(d)
+      }
+    end)
+  end
+
+  def devaddr_ranges_from_db(ranges) do
+    ranges
+    |> Enum.map(fn %DB.DevaddrRange{
+                     type: type,
+                     nwk_id: nwk_id,
+                     start_nwk_addr: start_addr,
+                     end_nwk_addr: end_addr
+                   } ->
+      s = Devaddr.new(type, nwk_id, start_addr)
+      e = Devaddr.new(type, nwk_id, end_addr)
+      {s, e}
+    end)
+  end
+
+  def from_proto(%{__struct__: Proto.Helium.Config.RouteV1} = route) do
+    server = RouteServer.from_proto(route.server)
+    euis = euis_from_proto(route.euis)
+    devaddr_ranges = devaddr_ranges_from_proto(route.devaddr_ranges)
+
+    %__MODULE__{
+      id: route.id,
+      oui: route.oui,
+      net_id: route.net_id,
+      max_copies: route.max_copies,
+      server: server,
+      euis: euis,
+      devaddr_ranges: devaddr_ranges
+    }
+  end
+
+  def euis_from_proto(euis) do
+    euis
+    |> Enum.map(fn %{__struct__: Proto.Helium.Config.EuiV1, app_eui: app, dev_eui: dev} ->
+      %{app_eui: app, dev_eui: dev}
+    end)
+  end
+
+  def devaddr_ranges_from_proto(devaddr_ranges) do
+    devaddr_ranges
+    |> Enum.map(fn %{__struct__: Proto.Helium.Config.DevaddrRangeV1, start_addr: s, end_addr: e} ->
+      {Devaddr.from_integer(s), Devaddr.from_integer(e)}
+    end)
+  end
+
+  def from_web(json_params) do
     params =
-      web_fields
+      json_params
       |> Enum.reduce(%{}, fn
-        {"net_id", net_id}, acc ->
-          Map.put(acc, :net_id, net_id)
+        {"id", id}, acc ->
+          Map.put(acc, :id, id)
+
+        {"oui", id}, acc ->
+          Map.put(acc, :oui, oui_from_web(id))
+
+        {"net_id", id}, acc ->
+          Map.put(acc, :net_id, net_id_from_web(id))
+
+        {"max_copies", max}, acc ->
+          Map.put(acc, :max_copies, max_copies_from_web(max))
+
+        {"server", server}, acc ->
+          Map.put(acc, :server, RouteServer.from_web(server))
 
         {"euis", euis}, acc ->
-          Map.put(acc, :euis, Enum.map(euis, &eui_from_web/1))
+          Map.put(acc, :euis, euis_from_web(euis))
 
         {"devaddr_ranges", ranges}, acc ->
-          Map.put(acc, :devaddr_ranges, Enum.map(ranges, &devaddr_range_from_web/1))
-
-        {"lns", lns}, acc ->
-          Map.put(acc, :lns, Lns.from_web(lns))
+          Map.put(acc, :devaddr_ranges, devaddr_ranges_from_web(ranges))
       end)
 
     struct!(__MODULE__, params)
   end
 
-  defp eui_from_web(%{"dev_eui" => dev, "app_eui" => app}) do
-    %{
-      dev_eui: dev,
-      app_eui: app
-    }
+  def oui_from_web(id) when is_binary(id) do
+    String.to_integer(id, 16)
   end
 
-  defp devaddr_range_from_web(%{"start_addr" => s, "end_addr" => e}) do
-    {String.to_integer(s, 16), String.to_integer(e, 16)}
+  def oui_from_web(id) when is_integer(id), do: id
+
+  def max_copies_from_web(max) when is_binary(max), do: String.to_integer(max, 10)
+
+  def max_copies_from_web(max) when is_integer(max), do: max
+
+  def net_id_from_web(id) when is_binary(id) do
+    String.to_integer(id, 16)
   end
 
-  def from_db(db_route = %DB.Route{}) do
-    %__MODULE__{
-      net_id: db_route.net_id,
-      lns: Lns.from_db(db_route.lns),
-      euis:
-        Enum.map(db_route.euis, fn db_eui ->
-          %{app_eui: db_eui.app_eui, dev_eui: db_eui.dev_eui}
-        end),
-      devaddr_ranges:
-        Enum.map(db_route.devaddr_ranges, fn range -> {range.start_addr, range.end_addr} end)
-    }
+  def net_id_from_web(id) when is_integer(id), do: id
+
+  def euis_from_web(web_euis) do
+    Enum.map(web_euis, &eui_pair_from_web/1)
   end
 
-  def from_proto(proto_route = %{__struct__: Proto.Helium.Config.RouteV1}) do
-    %__MODULE__{
-      net_id: proto_route.net_id,
-      lns: Lns.from_proto(proto_route.protocol),
-      euis:
-        Enum.map(proto_route.euis, fn e ->
-          %{app_eui: e.app_eui, dev_eui: e.dev_eui}
-        end),
-      devaddr_ranges:
-        Enum.map(proto_route.devaddr_ranges, fn %{start_addr: s, end_addr: e} ->
-          {s, e}
-        end)
-    }
+  def eui_pair_from_web(%{"app_eui" => app, "dev_eui" => dev})
+      when is_binary(app) and is_binary(dev) do
+    %{app_eui: String.to_integer(app, 16), dev_eui: String.to_integer(dev, 16)}
+  end
+
+  def eui_pair_from_web(%{"app_eui" => app, "dev_eui" => dev})
+      when is_integer(app) and is_integer(dev) do
+    %{app_eui: app, dev_eui: dev}
+  end
+
+  def devaddr_ranges_from_web(ranges) do
+    Enum.map(ranges, &devaddr_range_from_web/1)
+  end
+
+  def devaddr_range_from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
+      when is_binary(start_addr) and is_binary(end_addr) do
+    {Devaddr.from_str(start_addr), Devaddr.from_str(end_addr)}
+  end
+
+  def devaddr_range_from_web(%{"start_addr" => start_addr, "end_addr" => end_addr})
+      when is_integer(start_addr) and is_integer(end_addr) do
+    {Devaddr.from_integer(start_addr), Devaddr.from_integer(end_addr)}
   end
 end

@@ -3,50 +3,67 @@ defmodule HeliumConfigGRPC.RouteView do
   Provides functions to convert HeliumConfig.Core.Route structs to maps suitable for encoding protobuf messages.
   """
 
-  alias HeliumConfig.Core.GwmpLns
-  alias HeliumConfig.Core.HeliumRouterLns
-  alias HeliumConfig.Core.HttpRoamingLns
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.GwmpOpts
+  alias HeliumConfig.Core.PacketRouterOpts
+  alias HeliumConfig.Core.HttpRoamingOpts
   alias HeliumConfig.Core.Route
+  alias HeliumConfig.Core.RouteServer
 
   def route_params(route = %Route{}) do
     %{
+      id: route.id,
+      oui: route.oui,
       net_id: route.net_id,
-      protocol: lns_params(route.lns),
+      max_copies: route.max_copies,
+      server: server_params(route.server),
       euis: Enum.map(route.euis, &eui_pair_params/1),
       devaddr_ranges: Enum.map(route.devaddr_ranges, &devaddr_range_params/1)
     }
   end
 
-  def lns_params(%HttpRoamingLns{host: host, port: port}) do
+  def server_params(%RouteServer{host: host, port: port, protocol_opts: opts}) do
+    %{
+      host: host,
+      port: port,
+      protocol: protocol_params(opts)
+    }
+  end
+
+  def protocol_params(%HttpRoamingOpts{
+        dedupe_window: dedupe_window,
+        flow_type: flow_type,
+        path: path
+      }) do
     {:http_roaming,
      %{
-       ip: host,
-       port: port
+       dedupe_timeout: dedupe_window,
+       flow_type: flow_type,
+       path: path
      }}
   end
 
-  def lns_params(%GwmpLns{host: host, port: port}) do
+  def protocol_params(%GwmpOpts{mapping: mapping}) do
     {:gwmp,
      %{
-       ip: host,
-       port: port
+       mapping:
+         Enum.map(
+           mapping,
+           fn
+             {region, port} -> %{region: region, port: port}
+           end
+         )
      }}
   end
 
-  def lns_params(%HeliumRouterLns{host: host, port: port}) do
-    {:router,
-     %{
-       ip: host,
-       port: port
-     }}
-  end
+  def protocol_params(%PacketRouterOpts{}), do: {:packet_router, %{dummy_value: true}}
 
-  def eui_pair_params(pair = %{app_eui: _app, dev_eui: _dev}), do: pair
+  def eui_pair_params(%{app_eui: _app, dev_eui: _dev} = pair), do: pair
 
-  def devaddr_range_params({s, e}) do
+  def devaddr_range_params({%Devaddr{} = s, %Devaddr{} = e}) do
     %{
-      start_addr: s,
-      end_addr: e
+      start_addr: Devaddr.to_integer(s),
+      end_addr: Devaddr.to_integer(e)
     }
   end
 end

@@ -23,7 +23,7 @@ config :helium_config, HeliumConfigWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "R2IJPKAYZSKSQF/iHr8/rau523ctwCv9irJwSkJ3THdNDnoi4CsieE4GIlPoHDIM",
+  secret_key_base: "nHU+od1O9peGBtibRnX1PU67T1i1F542cE4jwkZ9loLUXw9js2N8hLUpPKgCfBXQ",
   watchers: []
 
 # ## SSL Support

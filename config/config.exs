@@ -8,15 +8,16 @@
 import Config
 
 config :helium_config,
-  ecto_repos: [HeliumConfig.Repo],
-  generators: [binary_id: true]
+  ecto_repos: [HeliumConfig.Repo]
 
 # Configures the endpoint
 config :helium_config, HeliumConfigWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: HeliumConfigWeb.ErrorView, accepts: ~w(json), layout: false],
   pubsub_server: HeliumConfig.PubSub,
-  live_view: [signing_salt: "Hi8FWS9S"]
+  live_view: [signing_salt: "6eyJ5uKZ"]
+
+config :helium_config, HeliumConfigGRPC.Endpoint, port: 50051
 
 # Configures the mailer
 #

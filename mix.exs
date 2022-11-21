@@ -10,11 +10,7 @@ defmodule HeliumConfig.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
-      dialyzer: [
-        ignore_warnings: "config/dialyzer.ignore",
-        flags: []
-      ]
+      deps: deps()
     ]
   end
 
@@ -34,7 +30,8 @@ defmodule HeliumConfig.MixProject do
 
   def router_config_protos do
     [
-      "src/service/config.proto"
+      "src/service/config.proto",
+      "src/region.proto"
     ]
   end
 
@@ -50,6 +47,8 @@ defmodule HeliumConfig.MixProject do
        "protoc",
        "-I",
        "./src/service",
+       "-I",
+       "./src",
        "--elixir_opt=package_prefix=Proto",
        "--elixir_out=plugins=grpc:#{proto_output_dir}"
      ] ++
@@ -62,7 +61,6 @@ defmodule HeliumConfig.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      # Phoenix Dependencies
       {:phoenix, "~> 1.6.11"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
@@ -74,17 +72,12 @@ defmodule HeliumConfig.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-
-      # Dev Tools
-      {:credo, ">= 0.0.0", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-
-      # Helium Config Service
       {:protobuf, "~> 0.9.0"},
       {:grpc, "~> 0.5.0"},
       {:helium_proto,
        git: "https://github.com/helium/proto.git",
-       branch: "macpie/packet_router",
+       branch: "master",
        compile: router_config_proto_compile(),
        app: false},
       {:libp2p_crypto, git: "https://github.com/helium/libp2p-crypto.git"}

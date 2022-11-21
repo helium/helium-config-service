@@ -1,30 +1,17 @@
 defmodule HeliumConfigGRPC.RouteStreamWorker do
-  @moduledoc """
-  This module is a GenServer that handles streaming replies to
-  `helium_config.config_service/route_updates` RPC calls.
-
-  It is started by HeliumConfigGRPC.Server.
-
-  On startup, it sends one `RoutesResV1` reply and then it waits for
-  an `:update` message from HeliumConfig.DB.UpdateNotifier.  If that
-  message arrives, the worker crafts another `RoutesResV1` and sends
-  that to the caller. 
-  """
-
   use GenServer
 
   alias HeliumConfig.DB.UpdateNotifier
   alias HeliumConfigGRPC.RouteView
 
-  alias Proto.Helium.Config.RoutesResV1
-  alias Proto.Helium.Config.RouteV1
+  alias Proto.Helium.Config.RouteStreamResV1
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
 
   def update(pid) do
-    GenServer.cast(pid, :update)
+    GenServer.cast(pid, :send_all)
   end
 
   @impl true
@@ -35,11 +22,28 @@ defmodule HeliumConfigGRPC.RouteStreamWorker do
   end
 
   @impl true
-  def handle_call(:update, _from, state = %{stream: stream}) do
+  def handle_call(:send_all, _from, %{stream: stream} = state) do
     stream2 =
-      get_routes()
-      |> push_routes(stream)
+      HeliumConfig.list_routes()
+      |> Enum.reduce(stream, fn route, s ->
+        send_reply(s, route, :create)
+      end)
 
+    {:reply, :ok, %{state | stream: stream2}}
+  end
+
+  def handle_call({:route_created, route}, _from, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :create)
+    {:reply, :ok, %{state | stream: stream2}}
+  end
+
+  def handle_call({:route_updated, route}, _from, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :update)
+    {:reply, :ok, %{state | stream: stream2}}
+  end
+
+  def handle_call({:route_deleted, route}, _from, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :delete)
     {:reply, :ok, %{state | stream: stream2}}
   end
 
@@ -48,22 +52,42 @@ defmodule HeliumConfigGRPC.RouteStreamWorker do
   end
 
   @impl true
-  def handle_cast(:update, state = %{stream: stream}) do
+  def handle_cast(:send_all, %{stream: stream} = state) do
     stream2 =
-      get_routes()
-      |> push_routes(stream)
+      HeliumConfig.list_routes()
+      |> Enum.reduce(stream, fn route, s ->
+        send_reply(s, route, :create)
+      end)
 
     {:noreply, %{state | stream: stream2}}
   end
 
-  defp get_routes do
-    HeliumConfig.list_routes()
-    |> Enum.map(&RouteView.route_params/1)
-    |> Enum.map(&RouteV1.new/1)
+  def handle_cast({:route_created, route}, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :create)
+    {:noreply, %{state | stream: stream2}}
   end
 
-  defp push_routes(routes, stream) do
-    reply = RoutesResV1.new(routes: routes)
+  def handle_cast({:route_updated, route}, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :update)
+    {:noreply, %{state | stream: stream2}}
+  end
+
+  def handle_cast({:route_deleted, route}, %{stream: stream} = state) do
+    stream2 = send_reply(stream, route, :delete)
+    {:noreply, %{state | stream: stream2}}
+  end
+
+  def handle_cast(_msg, state) do
+    {:reply, :ok, state}
+  end
+
+  defp route_reply(route, action) do
+    route_proto_params = RouteView.route_params(route)
+    RouteStreamResV1.new(%{route: route_proto_params, action: action})
+  end
+
+  defp send_reply(stream, route, action) do
+    reply = route_reply(route, action)
     GRPC.Server.send_reply(stream, reply)
   end
 end

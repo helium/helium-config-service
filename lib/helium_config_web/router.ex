@@ -1,6 +1,8 @@
 defmodule HeliumConfigWeb.Router do
   use HeliumConfigWeb, :router
 
+  use Plug.ErrorHandler
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -9,9 +11,35 @@ defmodule HeliumConfigWeb.Router do
     pipe_through :api
 
     get "/organizations", OrganizationController, :index
-    get "/organizations/:id", OrganizationController, :show
     post "/organizations", OrganizationController, :create
+    get "/organizations/:oui", OrganizationController, :show
+    put "/organizations/:oui", OrganizationController, :update
+    delete "/organizations/:oui", OrganizationController, :delete
+
     get "/routes", RouteController, :index
+    get "/routes/:id", RouteController, :show
+    post "/routes", RouteController, :create
+    put "/routes/:id", RouteController, :update
+  end
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, %{
+        kind: :error,
+        reason: %HeliumConfig.Core.InvalidDataError{message: message}
+      }) do
+    send_resp(conn, 400, Jason.encode!(%{error: message}))
+  end
+
+  def handle_errors(conn, %{kind: :error, reason: %Ecto.NoResultsError{}}) do
+    send_resp(conn, 404, "")
+  end
+
+  def handle_errors(conn, %{kind: :error, reason: %Ecto.InvalidChangesetError{}}) do
+    send_resp(conn, 400, "")
+  end
+
+  def handle_errors(conn, %{kind: :error, reason: %Ecto.ConstraintError{}}) do
+    send_resp(conn, 409, "")
   end
 
   # Enables LiveDashboard only for development

@@ -1,15 +1,54 @@
 defmodule HeliumConfig.Core.RouteValidator do
-  @moduledoc """
-  Functions for validating Core.Route structs.
-  """
-
   import HeliumConfig.Core.Validator
+
+  alias HeliumConfig.Core.NetID
+  alias HeliumConfig.Core.Devaddr
+  alias HeliumConfig.Core.InvalidDataError
+
+  @net_id_max_value 16_777_215
+
+  def validate!(fields) do
+    case validate(fields) do
+      :ok -> fields
+      {:errors, errors} -> raise InvalidDataError, message: "#{inspect(errors)}"
+      errors when is_list(errors) -> raise InvalidDataError, message: "#{inspect(errors)}"
+    end
+  end
 
   def validate(fields) when is_map(fields) do
     errors =
       []
-      |> require(fields, :organization_id, &validate_org_id/1)
       |> require(fields, :net_id, &validate_net_id/1)
+      |> require(fields, :devaddr_ranges, &validate_devaddr_ranges/1)
+      |> validate_net_id_and_devaddr_ranges(fields)
+
+    case errors do
+      [] -> :ok
+      _ -> errors
+    end
+  end
+
+  def validate_net_id(id) do
+    with :ok <- check(is_integer(id), {:error, "net_id must be an integer"}),
+         :ok <- check(id >= 0, {:error, "net_id must be greater or equal to 0"}),
+         :ok <-
+           check(
+             id <= @net_id_max_value,
+             {:error, "net_id must be less than or equal to #{@net_id_max_value}"}
+           ) do
+      :ok
+    end
+  end
+
+  def validate_devaddr_ranges(ranges) do
+    errors =
+      ranges
+      |> Enum.reduce([], fn range, acc ->
+        case validate_devaddr_range(range) do
+          :ok -> acc
+          {:error, e} -> [e | acc]
+        end
+      end)
 
     case errors do
       [] -> :ok
@@ -17,15 +56,91 @@ defmodule HeliumConfig.Core.RouteValidator do
     end
   end
 
-  defp validate_org_id(id) when is_integer(id) do
-    check(id > 0, {:error, "organization_id must be a non-zero integer"})
+  def validate_devaddr_range({%Devaddr{} = s, %Devaddr{} = e}) do
+    with :ok <-
+           check(
+             s.nwk_id == e.nwk_id,
+             {:error, "start and end addr in {#{s}, #{e}} must have the same NwkID"}
+           ),
+         :ok <-
+           check(
+             s.nwk_addr < e.nwk_addr,
+             {:error, "start NwkAddr must be less than end NwkAddr in {#{s}, #{e}}"}
+           ) do
+      :ok
+    end
   end
 
-  defp validate_org_id(_id), do: {:error, "organization_id must be a non-zero integer"}
-
-  defp validate_net_id(id) when is_integer(id) do
-    check(id > 0, {:error, "net_id must be a positive non-zero integer"})
+  def validate_devaddr_range({start_bin, end_bin})
+      when is_integer(start_bin) and is_integer(end_bin) do
+    with start_addr <- Devaddr.from_integer(start_bin),
+         end_addr <- Devaddr.from_integer(end_bin),
+         :ok <-
+           check(
+             start_addr.nwk_id == end_addr.nwk_id,
+             {:error,
+              "start and end addr in {#{start_addr}, #{end_addr}} must have the same NwkID"}
+           ),
+         :ok <-
+           check(
+             start_addr.nwk_addr < end_addr.nwk_addr,
+             {:error,
+              "start NwkAddr must be less than end NwkAddr in {#{start_addr}, #{end_addr}}"}
+           ) do
+      :ok
+    end
   end
 
-  defp validate_net_id(_id), do: {:error, "net_id must be a positive non-zero integer"}
+  def validate_devaddr_range(other),
+    do: {:error, "devaddr range must be a tuple of 32-bit binaries (#{inspect(other)})"}
+
+  def validate_net_id_and_devaddr_ranges([_ | _] = errors, _fields), do: errors
+
+  def validate_net_id_and_devaddr_ranges([], fields) do
+    net_id_bin = Map.fetch!(fields, :net_id)
+    ranges = Map.fetch!(fields, :devaddr_ranges)
+
+    Enum.reduce(ranges, [], fn range, acc ->
+      case validate_net_id_and_devaddr_range(net_id_bin, range) do
+        {:error, e} -> acc ++ [e]
+        :ok -> acc
+      end
+    end)
+  end
+
+  def validate_net_id_and_devaddr_range(net_id_bin, {%Devaddr{} = s, %Devaddr{} = e}) do
+    with net_id <- NetID.from_integer(net_id_bin),
+         :ok <-
+           check(
+             s.nwk_id == net_id.nwk_id,
+             {:error, "start addr in {#{s}, #{e}} must have the same NwkID as #{net_id}"}
+           ),
+         :ok <-
+           check(
+             e.nwk_id == net_id.nwk_id,
+             {:error, "end addr in {#{s}, #{e}} must have the same NwkID as #{net_id}"}
+           ) do
+      :ok
+    end
+  end
+
+  def validate_net_id_and_devaddr_range(net_id_bin, {start_addr_bin, end_addr_bin}) do
+    with net_id <- NetID.from_integer(net_id_bin),
+         start_addr <- Devaddr.from_integer(start_addr_bin),
+         end_addr <- Devaddr.from_integer(end_addr_bin),
+         :ok <-
+           check(
+             start_addr.nwk_id == net_id.nwk_id,
+             {:error,
+              "start addr in {#{start_addr}, #{end_addr}} must have the same NwkID as #{net_id}"}
+           ),
+         :ok <-
+           check(
+             end_addr.nwk_id == net_id.nwk_id,
+             {:error,
+              "end addr in {#{start_addr}, #{end_addr}} must have the same NwkID as #{net_id}"}
+           ) do
+      :ok
+    end
+  end
 end

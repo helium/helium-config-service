@@ -1,78 +1,61 @@
 defmodule HeliumConfig.DB.Route do
-  @moduledoc """
-  Database schema for Routes
-  """
-
   use Ecto.Schema
 
   import Ecto.Changeset
 
-  alias HeliumConfig.Core.Route, as: CoreRoute
-  alias HeliumConfig.DB.DevaddrRange
-  alias HeliumConfig.DB.EUI
-  alias HeliumConfig.DB.Lns
-  alias HeliumConfig.DB.Organization
+  alias HeliumConfig.DB
+  alias HeliumConfig.Core
 
-  defmodule ProtocolType do
-    @moduledoc """
-    Ecto Type for storing LNS protocol in the database.
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
 
-    The supported input values are :http and :gwmp.
-    """
-
-    use Ecto.Type
-    def type, do: :string
-
-    def cast(term), do: {:ok, term}
-
-    def load("http"), do: {:ok, :http}
-    def load("gwmp"), do: {:ok, :gwmp}
-    def load(_), do: :error
-
-    def dump(:http), do: Ecto.Type.dump(:string, "http")
-    def dump(:gwmp), do: Ecto.Type.dump(:string, "gwmp")
-    def dump(_), do: :error
-  end
-
-  schema "routes" do
+  schema("routes") do
+    field :oui, :decimal
     field :net_id, :integer
+    field :max_copies, :integer
 
-    has_one :lns, Lns, on_replace: :delete
+    has_one :server, DB.RouteServer, on_replace: :delete
 
-    has_many :euis,
-             EUI,
-             on_replace: :delete
+    has_many :euis, DB.EuiPair, on_replace: :delete
 
-    has_many :devaddr_ranges,
-             DevaddrRange,
-             on_replace: :delete
-
-    belongs_to :organization, Organization, foreign_key: :oui, references: :oui
+    has_many :devaddr_ranges, DB.DevaddrRange, on_replace: :delete
 
     timestamps()
   end
 
-  def changeset(core_route = %CoreRoute{}) do
-    changeset(%__MODULE__{}, core_route)
-  end
+  def changeset(route, fields \\ %{})
 
-  def changeset(route = %__MODULE__{}, core_route = %CoreRoute{}) do
-    fields = %{
+  def changeset(%__MODULE__{} = route, %Core.Route{} = core_route) do
+    route_params = %{
+      id: core_route.id,
+      oui: core_route.oui,
       net_id: core_route.net_id,
-      lns: core_route.lns,
+      max_copies: core_route.max_copies,
+      server: core_route.server,
       euis: core_route.euis,
-      devaddr_ranges:
-        Enum.map(core_route.devaddr_ranges, fn {s, e} -> %{start_addr: s, end_addr: e} end)
+      devaddr_ranges: devaddr_range_params(core_route.devaddr_ranges)
     }
 
-    changeset(route, fields)
+    changeset(route, route_params)
   end
 
-  def changeset(route = %__MODULE__{}, fields = %{}) do
+  def changeset(%__MODULE__{} = route, fields) do
     route
-    |> cast(fields, [:net_id])
+    |> cast(fields, [:id, :net_id, :max_copies, :oui])
+    |> unique_constraint(:id)
+    |> foreign_key_constraint(:oui)
     |> cast_assoc(:devaddr_ranges)
     |> cast_assoc(:euis)
-    |> cast_assoc(:lns)
+    |> cast_assoc(:server)
+  end
+
+  defp devaddr_range_params(ranges) do
+    Enum.map(ranges, fn {%Core.Devaddr{} = s, %Core.Devaddr{} = e} ->
+      %{
+        type: s.type,
+        nwk_id: s.nwk_id,
+        start_nwk_addr: s.nwk_addr,
+        end_nwk_addr: e.nwk_addr
+      }
+    end)
   end
 end
