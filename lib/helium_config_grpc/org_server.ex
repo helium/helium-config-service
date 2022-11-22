@@ -19,7 +19,7 @@ defmodule HeliumConfigGRPC.OrgServer do
       |> Map.get(:org)
       |> Core.Organization.from_proto()
       |> Core.OrganizationValidator.validate!()
-      |> HeliumConfig.create_organization()
+      |> HeliumConfig.create_organization!()
       |> OrganizationView.organization_params()
       |> ConfigProto.OrgV1.new()
     rescue
