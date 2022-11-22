@@ -34,6 +34,17 @@ defmodule HeliumConfig.Core.Organization do
     })
   end
 
+  def new_helium(owner_pubkey, payer_pubkey) do
+    next_addr = DB.next_helium_devaddr_constraint_start()
+    constraints = [Core.Devaddr.to_devaddr_range(next_addr, 8)]
+
+    new(%{
+      owner_pubkey: owner_pubkey,
+      payer_pubkey: payer_pubkey,
+      devaddr_constraints: constraints
+    })
+  end
+
   def member?(%__MODULE__{devaddr_constraints: constraints}, %Core.Devaddr{} = devaddr) do
     Enum.any?(constraints, &Core.DevaddrRange.member?(&1, devaddr))
   end

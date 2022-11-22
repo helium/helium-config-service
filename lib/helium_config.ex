@@ -68,6 +68,12 @@ defmodule HeliumConfig do
     |> Core.Organization.from_db()
   end
 
+  def create_helium_organization!(buyer_pubkey, payer_pubkey) do
+    Core.Organization.new_helium(buyer_pubkey, payer_pubkey)
+    |> DB.create_organization!()
+    |> Core.Organization.from_db()
+  end
+
   def update_organization!(%Core.Organization{} = org) do
     org
     |> DB.update_organization!()
