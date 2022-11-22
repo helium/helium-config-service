@@ -26,7 +26,7 @@ defmodule HeliumConfig.Core.Devaddr do
   def type_to_bits(:devaddr_11x17), do: {<<14::4>>, 11, 17}
   def type_to_bits(:devaddr_12x15), do: {<<30::5>>, 12, 15}
   def type_to_bits(:devaddr_13x13), do: {<<62::6>>, 13, 13}
-  def type_to_bits(:devaddr_15x10), do: {<<127::7>>, 15, 10}
+  def type_to_bits(:devaddr_15x10), do: {<<126::7>>, 15, 10}
   def type_to_bits(:devaddr_17x7), do: {<<254::8>>, 17, 7}
 
   def to_binary(%__MODULE__{} = devaddr) do
