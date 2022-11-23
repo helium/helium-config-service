@@ -5,6 +5,19 @@ defmodule HeliumConfig.DB do
 
   import Ecto.Query
 
+  def next_helium_devaddr_constraint_start do
+    {start_addr, _} = Core.DevaddrRange.from_net_id(Core.NetID.from_integer(0xC00053))
+
+    n =
+      from(d in DB.DevaddrConstraint, select: max(d.end_nwk_addr))
+      |> Repo.one()
+
+    case n do
+      nil -> start_addr
+      n when is_integer(n) -> Core.Devaddr.with_addr(start_addr, n + 1)
+    end
+  end
+
   def list_routes do
     DB.Route
     |> Repo.all()

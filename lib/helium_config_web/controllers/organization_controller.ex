@@ -15,7 +15,7 @@ defmodule HeliumConfigWeb.OrganizationController do
       params
       |> Core.Organization.from_web()
       |> Core.OrganizationValidator.validate!()
-      |> HeliumConfig.create_organization()
+      |> HeliumConfig.create_organization!()
 
     conn
     |> put_status(201)
@@ -33,7 +33,7 @@ defmodule HeliumConfigWeb.OrganizationController do
       updated_params
       |> Core.Organization.from_web()
       |> Map.put(:oui, oui)
-      |> HeliumConfig.update_organization()
+      |> HeliumConfig.update_organization!()
 
     conn
     |> put_status(200)

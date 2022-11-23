@@ -158,7 +158,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
   describe "update" do
     test "returns 200 given valid inputs", %{conn: conn} do
       core_org = valid_core_organization()
-      org = HeliumConfig.create_organization(core_org)
+      org = HeliumConfig.create_organization!(core_org)
 
       existing_route =
         org.routes
@@ -220,7 +220,7 @@ defmodule HeliumConfigWeb.RouteControllerTest do
 
     test "returns 400 given a route with a valid ID and an invalid OUI", %{conn: conn} do
       valid_org = valid_core_organization()
-      db_org = HeliumConfig.create_organization(valid_org)
+      db_org = HeliumConfig.create_organization!(valid_org)
 
       existing_db_route = hd(db_org.routes)
 

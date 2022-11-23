@@ -361,7 +361,7 @@ defmodule HeliumConfigGRPC.RouteServerAdminTest do
 
     valid_org =
       valid_core_organization(owner_pubkey: owner_pubkey)
-      |> HeliumConfig.create_organization()
+      |> HeliumConfig.create_organization!()
 
     ctx
     |> Map.put(:valid_org, valid_org)

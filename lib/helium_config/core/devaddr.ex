@@ -12,13 +12,21 @@ defmodule HeliumConfig.Core.Devaddr do
     )
   end
 
+  def with_addr(%__MODULE__{type: type, nwk_id: nwk_id} = devaddr, nwk_addr) do
+    %__MODULE__{
+      type: type,
+      nwk_id: nwk_id,
+      nwk_addr: nwk_addr
+    }
+  end
+
   def type_to_bits(:devaddr_6x25), do: {<<0::1>>, 6, 25}
   def type_to_bits(:devaddr_6x24), do: {<<2::2>>, 6, 24}
   def type_to_bits(:devaddr_9x20), do: {<<6::3>>, 9, 20}
   def type_to_bits(:devaddr_11x17), do: {<<14::4>>, 11, 17}
   def type_to_bits(:devaddr_12x15), do: {<<30::5>>, 12, 15}
   def type_to_bits(:devaddr_13x13), do: {<<62::6>>, 13, 13}
-  def type_to_bits(:devaddr_15x10), do: {<<127::7>>, 15, 10}
+  def type_to_bits(:devaddr_15x10), do: {<<126::7>>, 15, 10}
   def type_to_bits(:devaddr_17x7), do: {<<254::8>>, 17, 7}
 
   def to_binary(%__MODULE__{} = devaddr) do
@@ -38,6 +46,12 @@ defmodule HeliumConfig.Core.Devaddr do
     devaddr
     |> to_binary()
     |> Base.encode16()
+  end
+
+  def to_devaddr_range(%__MODULE__{type: type, nwk_id: nwk_id, nwk_addr: nwk_addr}, count) do
+    # NOTE: count includes start
+    ending = count - 1
+    HeliumConfig.Core.DevaddrRange.new(type, nwk_id, nwk_addr, nwk_addr + ending)
   end
 
   def from_bin(bin) do
