@@ -47,6 +47,19 @@ defmodule HeliumConfig.Core.GwmpOpts do
   def region_from_web("AS923_2"), do: :AS923_2
   def region_from_web("AS923_3"), do: :AS923_3
   def region_from_web("AS923_4"), do: :AS923_4
+  def region_from_web("AS923_1A"), do: :AS923_1A
   def region_from_web("AS923_1B"), do: :AS923_1B
+  def region_from_web("AS923_1C"), do: :AS923_1C
+  def region_from_web("AS923_1D"), do: :AS923_1D
+  def region_from_web("AS923_1E"), do: :AS923_1E
+  def region_from_web("AS923_1F"), do: :AS923_1F
+  def region_from_web("AU915_SB1"), do: :AU915_SB1
+  def region_from_web("AU915_SB2"), do: :AU915_SB2
+  def region_from_web("EU868_A"), do: :EU868_A
+  def region_from_web("EU868_B"), do: :EU868_B
+  def region_from_web("EU868_C"), do: :EU868_C
+  def region_from_web("EU868_D"), do: :EU868_D
+  def region_from_web("EU868_E"), do: :EU868_E
+  def region_from_web("EU868_F"), do: :EU868_F
   def region_from_web("CD900_1A"), do: :CD900_1A
 end

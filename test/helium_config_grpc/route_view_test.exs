@@ -72,8 +72,21 @@ defmodule HeliumConfigGRPC.RouteViewTest do
                  %{region: :AS923_2, port: 1009},
                  %{region: :AS923_3, port: 10010},
                  %{region: :AS923_4, port: 10011},
-                 %{region: :AS923_1B, port: 10012},
-                 %{region: :CD900_1A, port: 10013}
+                 %{region: :AS923_1A, port: 10012},
+                 %{region: :AS923_1B, port: 10013},
+                 %{region: :AS923_1C, port: 10014},
+                 %{region: "AS923_1D, port: 10015},
+                 %{region: :AS923_1E, port: 10016},
+                 %{region: :AS923_1F, port: 10017},
+                 %{region: :AU915_SB1, port: 10018},
+                 %{region: :AU915_SB2, port: 10019},
+                 %{region: :EU868_A, port: 10020},
+                 %{region: :EU868_B, port: 10021},
+                 %{region: :EU868_C, port: 10022},
+                 %{region: :EU868_D, port: 10023},
+                 %{region: :EU868_E, port: 10024},
+                 %{region: :EU868_F, port: 10025},
+                 %{region: :CD900_1A, port: 10026}
                ]
              }}
         },
