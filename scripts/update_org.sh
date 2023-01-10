@@ -113,10 +113,62 @@ curl -v \
               },
               {
                 "port": 10012,
-                "region": "AS923_1B"
+                "region": "AS923_1A"
               },
               {
                 "port": 10013,
+                "region": "AS923_1B"
+              },
+              {
+                "port": 10014,
+                "region": "AS923_1C"
+              },
+              {
+                "port": 10015,
+                "region": "AS923_1D"
+              },
+              {
+                "port": 10016,
+                "region": "AS923_1E"
+              },
+              {
+                "port": 10017,
+                "region": "AS923_1F"
+              },
+              {
+                "port": 10018,
+                "region": "AU915_SB1"
+              },
+                            {
+                "port": 10019,
+                "region": "AU915_SB2"
+              },
+                            {
+                "port": 10020,
+                "region": "EU868_A"
+              },
+                            {
+                "port": 10021,
+                "region": "EU868_B"
+              },
+                            {
+                "port": 10022,
+                "region": "EU868_C"
+              },
+                            {
+                "port": 10023,
+                "region": "EU868_D"
+              },
+                            {
+                "port": 10024,
+                "region": "EU868_E"
+              },
+                            {
+                "port": 10025,
+                "region": "EU868_F"
+              },
+              {
+                "port": 10026,
                 "region": "CD900_1A"
               }
             ],
